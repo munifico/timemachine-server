@@ -50,5 +50,11 @@ namespace timemachine_server.Controllers
         {
             return UniverseManager.Instance.GetUniverse(exchange);
         }
+
+        [HttpPost]
+        public void AddPortfolio([FromBody] List<string> codes)
+        {
+
+        }
     }
 }
