@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TimeMachine.Core;
 
-namespace timemachine_server
+namespace TimemachineServer
 {
     public class Startup
     {

@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using TimeMachine.Core;
 using TimeMachine.Server.DB;
 
-namespace timemachine_server.Controllers
+namespace TimemachineServer.Controllers
 {
     [Route("api/[controller]/[action]")]
     [ApiController]
@@ -52,7 +52,7 @@ namespace timemachine_server.Controllers
         }
 
         [HttpPost]
-        public void AddPortfolio([FromBody] List<string> codes)
+        public void AddPortfolio([FromBody] ReqAddPortfolio request)
         {
 
         }
