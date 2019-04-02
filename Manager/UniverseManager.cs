@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using TimeMachine.Server.DB;
 
-namespace TimeMachine.Core
+namespace TimeMachine.Server
 {
     public class UniverseManager
     {
@@ -23,6 +23,11 @@ namespace TimeMachine.Core
             using (var context = new QTContext())
             {
                 universe = context.Universe.ToList();
+
+                universe.ForEach(x =>
+                {
+                    AssetManager.Instance.AddAsset(x.AssetCode, x.AssetName);
+                });
             }
         }
 

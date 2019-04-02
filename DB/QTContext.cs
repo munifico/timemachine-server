@@ -5,6 +5,7 @@ namespace TimeMachine.Server.DB
     public class QTContext : DbContext
     {
         public DbSet<Subject> Universe { get; set; }
+        public DbSet<Stock> Stocks { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -18,6 +19,9 @@ namespace TimeMachine.Server.DB
 
             modelBuilder.Entity<Subject>()
                 .HasKey(e => e.AssetCode);
+
+            modelBuilder.Entity<Stock>()
+           .HasKey(e => e.AssetCode);
         }
     }
 }
