@@ -83,5 +83,11 @@ namespace TimemachineServer.Controllers
                 return response;
             }
         }
+
+        [HttpPost]
+        public ActionResult<string> AnalyzePortfolio([FromBody] ReqAnalyzePortfolio request)
+        {
+            return "";
+        }
     }
 }
