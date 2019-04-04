@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace TimeMachine.Server
+namespace TimeMachineServer
 {
     public class AssetManager
     {

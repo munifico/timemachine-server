@@ -34,9 +34,10 @@ namespace TimemachineServer
             public double Ratio { get; set; }
         }
 
+        public string Benchmark { get; set; }
         public string StartDate { get; set; }
         public string EndDate { get; set; }
-        public string Capital { get; set; }
+        public double Capital { get; set; }
         public string CommissionType { get; set; }
         public double Commission { get; set; }
         public string SlippageType { get; set; }

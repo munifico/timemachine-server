@@ -5,8 +5,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using TimeMachine.Server;
-using TimeMachine.Server.DB;
+using TimeMachineServer;
+using TimeMachineServer.DB;
+using static TimeMachineServer.Constants;
 
 namespace TimemachineServer.Controllers
 {
@@ -14,6 +15,8 @@ namespace TimemachineServer.Controllers
     [ApiController]
     public class ValuesController : ControllerBase
     {
+        private BacktestingProperty _property;
+
         // GET api/values
         [HttpGet]
         public ActionResult<IEnumerable<string>> Get()
@@ -87,7 +90,88 @@ namespace TimemachineServer.Controllers
         [HttpPost]
         public ActionResult<string> AnalyzePortfolio([FromBody] ReqAnalyzePortfolio request)
         {
+            var startDate = DateTime.ParseExact(request.StartDate, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            var endDate = DateTime.ParseExact(request.EndDate, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+
+            _property = new BacktestingProperty()
+            {
+                Start = startDate,
+                End = endDate,
+                Capital = request.Capital,
+                BenchmarkType = BenchmarkType.Nikkei225,
+                CommissionType = request.CommissionType == "Ratio" ? CommissionType.Ratio : CommissionType.Fixed,
+                Commission = request.Commission,
+                SlippageType = request.SlippageType == "Ratio" ? SlippageType.Ratio : SlippageType.Fixed,
+                Slippage = request.Slippage,
+                BuyAndHold = true,
+                VolatilityBreakout = true,
+                MovingAverage = true,
+                UseOutstandingBalance = request.AllowLeverage,
+                UsePointVolume = request.AllowDecimalPoint,
+                TradeType = request.OrderVolumeType == "Ratio" ? TradeType.Ratio : TradeType.Fixed
+            };
+
+            // 각 종목별 OHLC 데이터
+            var portfolioDataset = new Dictionary<string, Dictionary<DateTime, ITradingData>>();
+
+            foreach (var subject in request.Portfolio)
+            {
+                var tradingDataset = new Dictionary<DateTime, ITradingData>();
+                using (var context = new QTContext())
+                {
+                    var stock = context.Stocks.Where(x => x.AssetCode == subject.AssetCode &&
+                        x.CreatedAt >= startDate && x.CreatedAt <= endDate).ToList();
+
+                    stock.ForEach(x => tradingDataset.Add(x.CreatedAt, x));
+                }
+
+                portfolioDataset.Add(subject.AssetCode, tradingDataset);
+            }
+
+            var tradingCalendar = CreateCalendar(startDate, endDate);
+            var reports = new Dictionary<KeyValuePair<bool, StrategyType>, Report>();
+
+            if (request.Benchmark == "NIKKEI225")
+            {
+                PortfolioManager.Instance.AddToBenchmark(_property.Start); // TODO:  Portfoliomanager 사용하면 안되고, request마다 새로 생성해야 한다.
+
+                var simulator = new Simulator();
+                using (var context = new QTContext())
+                {
+                    var assetCode = "JP225";
+                    var tradingDataset = new Dictionary<DateTime, ITradingData>();
+                    var benchmarkDataset = new Dictionary<string, Dictionary<DateTime, ITradingData>>();
+
+                    var index = context.Indices.Where(x => x.AssetCode == assetCode &&
+                        x.CreatedAt >= startDate && x.CreatedAt <= endDate).ToList();
+
+                    index.ForEach(x => tradingDataset.Add(x.CreatedAt, x));
+                    benchmarkDataset.Add(assetCode, tradingDataset);
+
+                    var strategy = StrategyManager.Instance.GetStrategy(StrategyType.BuyAndHold);
+                    if (strategy == null)
+                    {
+                        strategy = new BuyAndHold();
+                    }
+                    var report = strategy.Run(benchmarkDataset, tradingCalendar, _property, isBenchmark: true);
+                    reports.Add(new KeyValuePair<bool, StrategyType>(true, StrategyType.BuyAndHold), report);
+                }
+            }
+
+            StrategyManager.Instance.Run(reports, portfolioDataset, tradingCalendar, _property);
+
             return "";
+        }
+
+        private List<DateTime> CreateCalendar(DateTime start, DateTime end)
+        {
+            var tradingCalendar = new List<DateTime>();
+            using (var context = new QTContext())
+            {
+                tradingCalendar = context.TradingCalendars.Where(x => x.TradingDate >= start && x.TradingDate <= end && x.IsoCode == "XTKS").Select(x => x.TradingDate).ToList();
+            }
+
+            return tradingCalendar;
         }
     }
 }

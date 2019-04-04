@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using TimeMachine.Server.DB;
+using TimeMachineServer.DB;
 
-namespace TimeMachine.Server
+namespace TimeMachineServer
 {
     public class UniverseManager
     {

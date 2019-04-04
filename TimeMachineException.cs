@@ -1,6 +1,6 @@
 using System;
 
-namespace TimeMachine.Server
+namespace TimeMachineServer
 {
     public class NotTradingDateException : Exception
     {

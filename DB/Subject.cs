@@ -2,7 +2,7 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TimeMachine.Server.DB
+namespace TimeMachineServer.DB
 {
     [Table("japan_universe")]
     public class Subject : IEquatable<Subject>

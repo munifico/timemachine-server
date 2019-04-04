@@ -1,11 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 
-namespace TimeMachine.Server.DB
+namespace TimeMachineServer.DB
 {
     public class QTContext : DbContext
     {
         public DbSet<Subject> Universe { get; set; }
         public DbSet<Stock> Stocks { get; set; }
+        public DbSet<Index> Indices { get; set; }
+        public DbSet<TradingCalendar> TradingCalendars { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -21,7 +23,13 @@ namespace TimeMachine.Server.DB
                 .HasKey(e => e.AssetCode);
 
             modelBuilder.Entity<Stock>()
-           .HasKey(e => e.AssetCode);
+           .HasKey(e => new { e.CreatedAt, e.AssetCode });
+
+            modelBuilder.Entity<Index>()
+            .HasKey(e => new { e.CreatedAt, e.AssetCode });
+
+            modelBuilder.Entity<TradingCalendar>()
+            .HasKey(e => new { e.TradingDate, e.IsoCode });
         }
     }
 }
