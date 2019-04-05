@@ -88,7 +88,7 @@ namespace TimemachineServer.Controllers
         }
 
         [HttpPost]
-        public ActionResult<string> AnalyzePortfolio([FromBody] ReqAnalyzePortfolio request)
+        public ActionResult<Dictionary<KeyValuePair<bool, StrategyType>, Report>> AnalyzePortfolio([FromBody] ReqAnalyzePortfolio request)
         {
             var startDate = DateTime.ParseExact(request.StartDate, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             var endDate = DateTime.ParseExact(request.EndDate, "yyyy-MM-dd", CultureInfo.InvariantCulture);
@@ -110,6 +110,10 @@ namespace TimemachineServer.Controllers
                 UsePointVolume = request.AllowDecimalPoint,
                 TradeType = request.OrderVolumeType == "Ratio" ? TradeType.Ratio : TradeType.Fixed
             };
+
+            StrategyManager.Instance.AddStrategy(StrategyType.BuyAndHold, new BuyAndHold());
+            StrategyManager.Instance.AddStrategy(StrategyType.VolatilityBreakout, new VolatilityBreakout());
+            StrategyManager.Instance.AddStrategy(StrategyType.MovingAverage, new MovingAverage());
 
             // 각 종목별 OHLC 데이터
             var portfolioDataset = new Dictionary<string, Dictionary<DateTime, ITradingData>>();
@@ -160,7 +164,7 @@ namespace TimemachineServer.Controllers
 
             StrategyManager.Instance.Run(reports, portfolioDataset, tradingCalendar, _property);
 
-            return "";
+            return reports;
         }
 
         private List<DateTime> CreateCalendar(DateTime start, DateTime end)

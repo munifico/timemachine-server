@@ -1,7 +1,7 @@
 using System;
 using TimeMachineServer.Helper;
 
-namespace TimeMachine.Core
+namespace TimeMachineServer
 {
     public struct YearOfWeek
     {
