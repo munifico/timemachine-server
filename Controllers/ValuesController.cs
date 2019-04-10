@@ -68,17 +68,23 @@ namespace TimemachineServer.Controllers
                 {
                     if (asset.Exchange != "ETF")
                     {
-                        var stock = context.Stocks
-                                            .Where(x => x.CreatedAt >= date && x.AssetCode == asset.AssetCode)
-                                            .OrderBy(x => x.CreatedAt)
-                                            .Take(10) // date가 실제 트레이딩 날짜가 아닐 수 있기 때문에 최대 10일 뒤의 데이터를 가져온다.(10일간 거래를 안할 수 없다는 가정)
-                                            .FirstOrDefault();
+                        // var stock = context.Stocks
+                        //                     .Where(x => x.CreatedAt >= date && x.AssetCode == asset.AssetCode)
+                        //                     .OrderBy(x => x.CreatedAt)
+                        //                     .Take(10) // date가 실제 트레이딩 날짜가 아닐 수 있기 때문에 최대 10일 뒤의 데이터를 가져온다.(10일간 거래를 안할 수 없다는 가정)
+                        //                     .FirstOrDefault();
+
+                        var subject = new Subject()
+                        {
+                            AssetCode = asset.AssetCode
+                        };
+                        PortfolioManager.Instance.AddToPortfolio(subject, date);
 
                         response.Data.Add(new ResOpenPrice.Context
                         {
                             AssetCode = asset.AssetCode,
                             AssetName = AssetManager.Instance.GetAssetName(asset.AssetCode),
-                            OpenPrice = stock.Open,
+                            OpenPrice = subject.Price
                         });
                     }
                 }
@@ -112,8 +118,8 @@ namespace TimemachineServer.Controllers
             };
 
             StrategyManager.Instance.AddStrategy(StrategyType.BuyAndHold, new BuyAndHold());
-            StrategyManager.Instance.AddStrategy(StrategyType.VolatilityBreakout, new VolatilityBreakout());
-            StrategyManager.Instance.AddStrategy(StrategyType.MovingAverage, new MovingAverage());
+            // StrategyManager.Instance.AddStrategy(StrategyType.VolatilityBreakout, new VolatilityBreakout());
+            // StrategyManager.Instance.AddStrategy(StrategyType.MovingAverage, new MovingAverage());
 
             // 각 종목별 OHLC 데이터
             var portfolioDataset = new Dictionary<string, Dictionary<DateTime, ITradingData>>();
@@ -135,32 +141,32 @@ namespace TimemachineServer.Controllers
             var tradingCalendar = CreateCalendar(startDate, endDate);
             var reports = new Dictionary<KeyValuePair<bool, StrategyType>, Report>();
 
-            if (request.Benchmark == "NIKKEI225")
-            {
-                PortfolioManager.Instance.AddToBenchmark(_property.Start); // TODO:  Portfoliomanager 사용하면 안되고, request마다 새로 생성해야 한다.
+            // if (request.Benchmark == "NIKKEI225")
+            // {
+            //     PortfolioManager.Instance.AddToBenchmark(_property.Start); // TODO:  Portfoliomanager 사용하면 안되고, request마다 새로 생성해야 한다.
 
-                var simulator = new Simulator();
-                using (var context = new QTContext())
-                {
-                    var assetCode = "JP225";
-                    var tradingDataset = new Dictionary<DateTime, ITradingData>();
-                    var benchmarkDataset = new Dictionary<string, Dictionary<DateTime, ITradingData>>();
+            //     var simulator = new Simulator();
+            //     using (var context = new QTContext())
+            //     {
+            //         var assetCode = "JP225";
+            //         var tradingDataset = new Dictionary<DateTime, ITradingData>();
+            //         var benchmarkDataset = new Dictionary<string, Dictionary<DateTime, ITradingData>>();
 
-                    var index = context.Indices.Where(x => x.AssetCode == assetCode &&
-                        x.CreatedAt >= startDate && x.CreatedAt <= endDate).ToList();
+            //         var index = context.Indices.Where(x => x.AssetCode == assetCode &&
+            //             x.CreatedAt >= startDate && x.CreatedAt <= endDate).ToList();
 
-                    index.ForEach(x => tradingDataset.Add(x.CreatedAt, x));
-                    benchmarkDataset.Add(assetCode, tradingDataset);
+            //         index.ForEach(x => tradingDataset.Add(x.CreatedAt, x));
+            //         benchmarkDataset.Add(assetCode, tradingDataset);
 
-                    var strategy = StrategyManager.Instance.GetStrategy(StrategyType.BuyAndHold);
-                    if (strategy == null)
-                    {
-                        strategy = new BuyAndHold();
-                    }
-                    var report = strategy.Run(benchmarkDataset, tradingCalendar, _property, isBenchmark: true);
-                    reports.Add(new KeyValuePair<bool, StrategyType>(true, StrategyType.BuyAndHold), report);
-                }
-            }
+            //         var strategy = StrategyManager.Instance.GetStrategy(StrategyType.BuyAndHold);
+            //         if (strategy == null)
+            //         {
+            //             strategy = new BuyAndHold();
+            //         }
+            //         var report = strategy.Run(benchmarkDataset, tradingCalendar, _property, isBenchmark: true);
+            //         reports.Add(new KeyValuePair<bool, StrategyType>(true, StrategyType.BuyAndHold), report);
+            //     }
+            // }
 
             StrategyManager.Instance.Run(reports, portfolioDataset, tradingCalendar, _property);
 
