@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using static TimemachineServer.ReqAnalyzePortfolio;
 using static TimeMachineServer.Constants;
 
 namespace TimeMachineServer
@@ -12,12 +13,13 @@ namespace TimeMachineServer
         }
 
         public override Report Run(Dictionary<string, Dictionary<DateTime, ITradingData>> portfolioDataset,
-           List<DateTime> tradingCalendar,
-           BacktestingProperty property,
-           bool isBenchmark = false)
+            List<DateTime> tradingCalendar,
+            BacktestingProperty property,
+            Dictionary<string, PortfolioSubject> portfolio,
+            bool isBenchmark = false)
         {
             _simulator = new Simulator();
-            return _simulator.Run(this, portfolioDataset, tradingCalendar, property);
+            return _simulator.Run(this, portfolioDataset, tradingCalendar, property, portfolio, isBenchmark);
         }
 
         public override void OnAfterOpen(string assetCode)
@@ -31,10 +33,10 @@ namespace TimeMachineServer
                 switch (_simulator.Property.TradeType)
                 {
                     case TradeType.Fixed:
-                        _simulator.LimitOrder(assetCode, OrderType.Buy, price, PortfolioManager.Instance.GetSubject(assetCode).Volume);
+                        _simulator.LimitOrder(assetCode, OrderType.Buy, price, _simulator.GetSubject(assetCode).Volume);
                         break;
                     case TradeType.Ratio:
-                        _simulator.LimitOrderPercent(assetCode, OrderType.Buy, price, PortfolioManager.Instance.GetSubject(assetCode).Ratio);
+                        _simulator.LimitOrderPercent(assetCode, OrderType.Buy, price, _simulator.GetSubject(assetCode).Ratio);
                         break;
                 }
             }

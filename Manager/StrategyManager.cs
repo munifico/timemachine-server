@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using static TimemachineServer.ReqAnalyzePortfolio;
 using static TimeMachineServer.Constants;
 
 namespace TimeMachineServer
@@ -48,11 +49,12 @@ namespace TimeMachineServer
         public void Run(Dictionary<KeyValuePair<bool, StrategyType>, Report> reports,
             Dictionary<string, Dictionary<DateTime, ITradingData>> portfolioDataset,
             List<DateTime> tradingCalendar,
-            BacktestingProperty property)
+            BacktestingProperty property,
+            Dictionary<string, PortfolioSubject> portfolio)
         {
             foreach (var strategy in _strategies.Values)
             {
-                var report = strategy.Run(portfolioDataset, tradingCalendar, property);
+                var report = strategy.Run(portfolioDataset, tradingCalendar, property, portfolio);
                 reports.Add(new KeyValuePair<bool, StrategyType>(false, strategy.StrategyType), report);
             }
         }

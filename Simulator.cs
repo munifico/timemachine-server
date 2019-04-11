@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using TimeMachineServer.Helper;
+using static TimemachineServer.ReqAnalyzePortfolio;
 using static TimeMachineServer.Constants;
 
 namespace TimeMachineServer
@@ -27,11 +28,13 @@ namespace TimeMachineServer
         private double _outstandingBalance = 0;
 
         private Dictionary<string, List<RecordDetail>> _recordDetails = new Dictionary<string, List<RecordDetail>>();
+        private Dictionary<string, PortfolioSubject> _portfolio;
 
         public Report Run(StrategyBase strategy,
             Dictionary<string, Dictionary<DateTime, ITradingData>> portfolioDataset,
             List<DateTime> tradingCalendar,
             BacktestingProperty property,
+            Dictionary<string, PortfolioSubject> portfolio,
             bool isBenchmark = false)
         {
             _strategy = strategy;
@@ -39,6 +42,7 @@ namespace TimeMachineServer
             _report = new Report(_strategy.StrategyType);
             _portfolioDataset = portfolioDataset;
             _tradingCalendar = tradingCalendar;
+            _portfolio = portfolio;
             Property = property;
 
             _balance = property.Capital;
@@ -46,9 +50,11 @@ namespace TimeMachineServer
 
             foreach (var assetCode in _portfolioDataset.Keys)
             {
+                var initialBalance = Property.Capital * _portfolio[assetCode].Ratio;
+
                 _holdStocks.Add(assetCode, new HoldStock
                 {
-                    InitialBalance = Property.Capital * PortfolioManager.Instance.GetSubject(assetCode).Ratio
+                    InitialBalance = initialBalance
                 });
 
                 _report.Transactions.Add(assetCode, new Dictionary<DateTime, List<Transaction>>());
@@ -137,6 +143,11 @@ namespace TimeMachineServer
             return new YearOfWeek(_currentDate);
         }
 
+        public PortfolioSubject GetSubject(string assetCode)
+        {
+            return _portfolio[assetCode];
+        }
+
         public double GetPrice(string assetCode, PriceType priceType, int period)
         {
             if (!_portfolioDataset.ContainsKey(assetCode))
@@ -170,7 +181,7 @@ namespace TimeMachineServer
 
             foreach (var assetCode in _recordDetails.Keys)
             {
-                var initialBalance = Property.Capital * PortfolioManager.Instance.GetSubject(assetCode).Ratio;
+                var initialBalance = Property.Capital * _portfolio[assetCode].Ratio;
                 var endBalance = initialBalance + _recordDetails[assetCode].Last().CumulativeReturn;
 
                 var summaryDetail = new SummaryDetail
@@ -326,7 +337,8 @@ namespace TimeMachineServer
                     break;
                 default:
                     {
-                        dailyReturnRatio = (totalBalance - prevTotalBalance) / prevTotalBalance;
+                        dailyReturnRatio = prevTotalBalance == 0 ?
+                            0 : (totalBalance - prevTotalBalance) / prevTotalBalance;
                     }
                     break;
             }

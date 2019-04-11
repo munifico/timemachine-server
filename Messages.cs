@@ -28,13 +28,13 @@ namespace TimemachineServer
 
     public class ReqAnalyzePortfolio
     {
-        public class Subject
+        public class PortfolioSubject
         {
             public string AssetCode { get; set; }
+            public double Volume { get; set; }
             public double Ratio { get; set; }
         }
 
-        public string Benchmark { get; set; }
         public string StartDate { get; set; }
         public string EndDate { get; set; }
         public double Capital { get; set; }
@@ -45,6 +45,10 @@ namespace TimemachineServer
         public string OrderVolumeType { get; set; }
         public bool AllowDecimalPoint { get; set; }
         public bool AllowLeverage { get; set; }
-        public List<Subject> Portfolio { get; set; }
+        public List<PortfolioSubject> Portfolio { get; set; }
+        public PortfolioSubject Benchmark { get; set; }
+        public bool UseBuyAndHold { get; set; }
+        public bool UseVolatilityBreakout { get; set; }
+        public bool UseMovingAverage { get; set; }
     }
 }

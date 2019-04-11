@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using static TimemachineServer.ReqAnalyzePortfolio;
 using static TimeMachineServer.Constants;
 
 namespace TimeMachineServer
@@ -20,6 +21,7 @@ namespace TimeMachineServer
         public abstract Report Run(Dictionary<string, Dictionary<DateTime, ITradingData>> portfolioDataset,
            List<DateTime> tradingCalendar,
            BacktestingProperty property,
+           Dictionary<string, PortfolioSubject> portfolio,
            bool isBenchmark = false);
 
         public abstract void OnAfterOpen(string assetCode);

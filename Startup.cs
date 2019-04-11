@@ -57,6 +57,7 @@ namespace TimemachineServer
             }
 
             UniverseManager.Instance.Initialize();
+            AssetManager.Instance.AddAsset("JP225", "NIKKEI225");
 
             app.UseCors(policyName);
             app.UseHttpsRedirection();
