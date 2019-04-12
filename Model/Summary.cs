@@ -6,6 +6,7 @@ namespace TimeMachineServer
     {
         public ObservableCollection<SummaryDetail> SummaryDetails { get; set; } = new ObservableCollection<SummaryDetail>();
 
+        public string RelationalKey { get; set; }
         public string SubjectType { get; set; }
         public string StrategyType { get; set; }
         public double InitialBalance { get; set; }
@@ -20,6 +21,7 @@ namespace TimeMachineServer
 
     public class SummaryDetail
     {
+        public string RelationalKey { get; set; }
         public string AssetName { get; set; }
         public string AssetCode { get; set; }
         public double InitialBalance { get; set; }

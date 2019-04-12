@@ -91,8 +91,9 @@ namespace TimeMachineServer
             }
 
             // 통계생성
-            var summaryDetails = CreateSummaryDetails();
-            _report.Summary = CreateSummary(summaryDetails);
+            string relationalKey = Guid.NewGuid().ToString();
+            var summaryDetails = CreateSummaryDetails(relationalKey);
+            _report.Summary = CreateSummary(summaryDetails, relationalKey);
 
             return _report;
         }
@@ -175,7 +176,7 @@ namespace TimeMachineServer
             }
         }
 
-        private List<SummaryDetail> CreateSummaryDetails()
+        private List<SummaryDetail> CreateSummaryDetails(string relationalKey)
         {
             var summaryDetails = new List<SummaryDetail>();
 
@@ -186,6 +187,7 @@ namespace TimeMachineServer
 
                 var summaryDetail = new SummaryDetail
                 {
+                    RelationalKey = relationalKey,
                     AssetName = AssetManager.Instance.GetAssetName(assetCode),
                     AssetCode = assetCode,
                     InitialBalance = initialBalance,
@@ -201,7 +203,7 @@ namespace TimeMachineServer
             return summaryDetails;
         }
 
-        private Summary CreateSummary(List<SummaryDetail> summaryDetails)
+        private Summary CreateSummary(List<SummaryDetail> summaryDetails, string relationalKey)
         {
             var periodReturnRatio = (_report.Records.Last().TotalBalance - Property.Capital) / Property.Capital;
             var annualizedReturnRatio = Math.Pow(Math.Pow(_report.Records.Last().TotalBalance / _report.Records.First().TotalBalance, (1.0 / _tradingCalendar.Count)), 250.0) - 1.0;
@@ -214,6 +216,7 @@ namespace TimeMachineServer
 
             var summary = new Summary
             {
+                RelationalKey = relationalKey,
                 SubjectType = (_isBenchmark == true) ? "벤치마크" : "포트폴리오",
                 StrategyType = EnumHelper<StrategyType>.GetDisplayValue(_strategy.StrategyType),
                 InitialBalance = initBalance,

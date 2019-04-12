@@ -97,7 +97,7 @@ namespace TimeMachineServer
             // 마지막날은 매수하지 않음
             if (!_simulator.IsLastDate(assetCode))
             {
-                if (volPrice > curLow && volPrice <= curHigh)
+                if (volPrice > curLow && volPrice < curHigh)
                 {
                     // 돌파가격에 매수
                     switch (_simulator.Property.TradeType)
