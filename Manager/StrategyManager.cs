@@ -46,7 +46,7 @@ namespace TimeMachineServer
             _strategies.Clear();
         }
 
-        public void Run(Dictionary<KeyValuePair<bool, StrategyType>, Report> reports,
+        public void Run(List<Report> reports,
             Dictionary<string, Dictionary<DateTime, ITradingData>> portfolioDataset,
             List<DateTime> tradingCalendar,
             BacktestingProperty property,
@@ -55,7 +55,7 @@ namespace TimeMachineServer
             foreach (var strategy in _strategies.Values)
             {
                 var report = strategy.Run(portfolioDataset, tradingCalendar, property, portfolio);
-                reports.Add(new KeyValuePair<bool, StrategyType>(false, strategy.StrategyType), report);
+                reports.Add(report);
             }
         }
     }

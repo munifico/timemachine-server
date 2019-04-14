@@ -7,13 +7,13 @@ namespace TimeMachineServer
     {
         public enum StrategyType
         {
-            [Display(Name = "바이앤홀드")]
+            [Display(Name = "Buy And Hold")]
             BuyAndHold,
 
-            [Display(Name = "변동성돌파")]
+            [Display(Name = "Volatility Breakout")]
             VolatilityBreakout,
 
-            [Display(Name = "이평선돌파")]
+            [Display(Name = "Moving Average")]
             MovingAverage,
         }
 

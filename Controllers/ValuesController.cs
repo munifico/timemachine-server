@@ -95,7 +95,7 @@ namespace TimemachineServer.Controllers
         }
 
         [HttpPost]
-        public ActionResult<Dictionary<KeyValuePair<bool, StrategyType>, Report>> AnalyzePortfolio([FromBody] ReqAnalyzePortfolio request)
+        public ActionResult<List<Report>> AnalyzePortfolio([FromBody] ReqAnalyzePortfolio request)
         {
             var startDate = DateTime.ParseExact(request.StartDate, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             var endDate = DateTime.ParseExact(request.EndDate, "yyyy-MM-dd", CultureInfo.InvariantCulture);
@@ -149,7 +149,7 @@ namespace TimemachineServer.Controllers
             }
 
             var tradingCalendar = CreateCalendar(startDate, endDate);
-            var reports = new Dictionary<KeyValuePair<bool, StrategyType>, Report>();
+            var reports = new List<Report>();
 
             if (request.Benchmark.AssetCode == "JP225")
             {
@@ -178,7 +178,7 @@ namespace TimemachineServer.Controllers
                     benchmark.Add("JP225", request.Benchmark);
 
                     var report = strategy.Run(benchmarkDataset, tradingCalendar, _property, benchmark, isBenchmark: true);
-                    reports.Add(new KeyValuePair<bool, StrategyType>(true, StrategyType.BuyAndHold), report);
+                    reports.Add(report);
                 }
             }
 
