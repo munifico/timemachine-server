@@ -133,7 +133,6 @@ namespace TimemachineServer.Controllers
 
             // 각 종목별 OHLC 데이터
             var portfolioDataset = new Dictionary<string, Dictionary<DateTime, ITradingData>>();
-
             foreach (var subject in request.Portfolio)
             {
                 var tradingDataset = new Dictionary<DateTime, ITradingData>();
@@ -151,42 +150,44 @@ namespace TimemachineServer.Controllers
             var tradingCalendar = CreateCalendar(startDate, endDate);
             var reports = new List<Report>();
 
-            if (request.Benchmark.AssetCode == "JP225")
-            {
-                // PortfolioManager.Instance.AddToBenchmark(_property.Start); // TODO:  Portfoliomanager 사용하면 안되고, request마다 새로 생성해야 한다.
+            // benchmark
+            RunBenchmark(request, startDate, endDate, tradingCalendar, reports);
 
-                var simulator = new Simulator();
-                using (var context = new QTContext())
-                {
-                    var assetCode = "JP225";
-                    var tradingDataset = new Dictionary<DateTime, ITradingData>();
-                    var benchmarkDataset = new Dictionary<string, Dictionary<DateTime, ITradingData>>();
-
-                    var index = context.Indices.Where(x => x.AssetCode == assetCode &&
-                        x.CreatedAt >= startDate && x.CreatedAt <= endDate).ToList();
-
-                    index.ForEach(x => tradingDataset.Add(x.CreatedAt, x));
-                    benchmarkDataset.Add(assetCode, tradingDataset);
-
-                    var strategy = StrategyManager.Instance.GetStrategy(StrategyType.BuyAndHold);
-                    if (strategy == null)
-                    {
-                        strategy = new BuyAndHold();
-                    }
-
-                    var benchmark = new Dictionary<string, PortfolioSubject>();
-                    benchmark.Add("JP225", request.Benchmark);
-
-                    var report = strategy.Run(benchmarkDataset, tradingCalendar, _property, benchmark, isBenchmark: true);
-                    reports.Add(report);
-                }
-            }
-
+            // portfolio
             var portfolio = request.Portfolio.ToDictionary(x => x.AssetCode, x => x);
-
             StrategyManager.Instance.Run(reports, portfolioDataset, tradingCalendar, _property, portfolio);
 
             return reports;
+        }
+
+        private void RunBenchmark(ReqAnalyzePortfolio request, DateTime startDate, DateTime endDate, List<DateTime> tradingCalendar, List<Report> reports)
+        {
+            var simulator = new Simulator();
+            using (var context = new QTContext())
+            {
+                var assetCode = request.Benchmark.AssetCode;
+                var tradingDataset = new Dictionary<DateTime, ITradingData>();
+                var benchmarkDataset = new Dictionary<string, Dictionary<DateTime, ITradingData>>();
+
+                var index = context.Indices.Where(x => x.AssetCode == assetCode &&
+                    x.CreatedAt >= startDate && x.CreatedAt <= endDate).ToList();
+
+                index.ForEach(x => tradingDataset.Add(x.CreatedAt, x));
+                benchmarkDataset.Add(assetCode, tradingDataset);
+
+                var strategy = StrategyManager.Instance.GetStrategy(StrategyType.BuyAndHold);
+                if (strategy == null)
+                {
+                    strategy = new BuyAndHold();
+                }
+
+                var benchmark = new Dictionary<string, PortfolioSubject>();
+                benchmark.Add(assetCode, request.Benchmark);
+
+                var report = strategy.Run(benchmarkDataset, tradingCalendar, _property, benchmark, isBenchmark: true);
+                reports.Add(report);
+
+            }
         }
 
         private List<DateTime> CreateCalendar(DateTime start, DateTime end)
