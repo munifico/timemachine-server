@@ -8,6 +8,7 @@ namespace TimeMachineServer.DB
         public DbSet<Stock> Stocks { get; set; }
         public DbSet<Index> Indices { get; set; }
         public DbSet<TradingCalendar> TradingCalendars { get; set; }
+        public DbSet<Split> Splits { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -30,6 +31,9 @@ namespace TimeMachineServer.DB
 
             modelBuilder.Entity<TradingCalendar>()
             .HasKey(e => new { e.TradingDate, e.IsoCode });
+
+            modelBuilder.Entity<Split>()
+                .HasKey(e => new { e.AssetCode, e.SplitDate });
         }
     }
 }

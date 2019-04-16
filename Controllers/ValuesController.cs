@@ -138,8 +138,24 @@ namespace TimemachineServer.Controllers
                 var tradingDataset = new Dictionary<DateTime, ITradingData>();
                 using (var context = new QTContext())
                 {
+                    // 원본
                     var stock = context.Stocks.Where(x => x.AssetCode == subject.AssetCode &&
                         x.CreatedAt >= startDate && x.CreatedAt <= endDate).ToList();
+
+                    // 분할정보
+                    var splits = context.Splits.Where(x => x.AssetCode == subject.AssetCode).ToList();
+
+                    // 분할적용
+                    splits.ForEach(split =>
+                    {
+                        foreach (var s in stock.Where(x => x.CreatedAt < split.SplitDate))
+                        {
+                            s.Open = s.Open / split.SplitRatio;
+                            s.High = s.High / split.SplitRatio;
+                            s.Low = s.Low / split.SplitRatio;
+                            s.Close = s.Close / split.SplitRatio;
+                        }
+                    });
 
                     stock.ForEach(x => tradingDataset.Add(x.CreatedAt, x));
                 }
