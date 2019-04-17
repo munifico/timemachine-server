@@ -16,7 +16,7 @@ namespace TimemachineServer.Controllers
     [ApiController]
     public class ValuesController : ControllerBase
     {
-        private BacktestingProperty _property;
+        // private BacktestingProperty _property;
 
         // GET api/values
         [HttpGet]
@@ -100,7 +100,7 @@ namespace TimemachineServer.Controllers
             var startDate = DateTime.ParseExact(request.StartDate, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             var endDate = DateTime.ParseExact(request.EndDate, "yyyy-MM-dd", CultureInfo.InvariantCulture);
 
-            _property = new BacktestingProperty()
+            BacktestingProperty property = new BacktestingProperty()
             {
                 Start = startDate,
                 End = endDate,
@@ -118,17 +118,19 @@ namespace TimemachineServer.Controllers
                 TradeType = request.OrderVolumeType == "Ratio" ? TradeType.Ratio : TradeType.Fixed
             };
 
+            var strategies = new Dictionary<StrategyType, StrategyBase>();
+
             if (request.UseBuyAndHold)
             {
-                StrategyManager.Instance.AddStrategy(StrategyType.BuyAndHold, new BuyAndHold());
+                strategies.Add(StrategyType.BuyAndHold, new BuyAndHold());
             }
             if (request.UseVolatilityBreakout)
             {
-                StrategyManager.Instance.AddStrategy(StrategyType.VolatilityBreakout, new VolatilityBreakout());
+                strategies.Add(StrategyType.VolatilityBreakout, new VolatilityBreakout());
             }
             if (request.UseMovingAverage)
             {
-                StrategyManager.Instance.AddStrategy(StrategyType.MovingAverage, new MovingAverage());
+                strategies.Add(StrategyType.MovingAverage, new MovingAverage());
             }
 
             // 각 종목별 OHLC 데이터
@@ -167,16 +169,20 @@ namespace TimemachineServer.Controllers
             var reports = new List<Report>();
 
             // benchmark
-            RunBenchmark(request, startDate, endDate, tradingCalendar, reports);
+            RunBenchmark(request, property, startDate, endDate, tradingCalendar, reports);
 
             // portfolio
             var portfolio = request.Portfolio.ToDictionary(x => x.AssetCode, x => x);
-            StrategyManager.Instance.Run(reports, portfolioDataset, tradingCalendar, _property, portfolio);
+            foreach (var strategy in strategies.Values)
+            {
+                var report = strategy.Run(portfolioDataset, tradingCalendar, property, portfolio);
+                reports.Add(report);
+            }
 
             return reports;
         }
 
-        private void RunBenchmark(ReqAnalyzePortfolio request, DateTime startDate, DateTime endDate, List<DateTime> tradingCalendar, List<Report> reports)
+        private void RunBenchmark(ReqAnalyzePortfolio request, BacktestingProperty property, DateTime startDate, DateTime endDate, List<DateTime> tradingCalendar, List<Report> reports)
         {
             var simulator = new Simulator();
             using (var context = new QTContext())
@@ -191,18 +197,12 @@ namespace TimemachineServer.Controllers
                 index.ForEach(x => tradingDataset.Add(x.CreatedAt, x));
                 benchmarkDataset.Add(assetCode, tradingDataset);
 
-                var strategy = StrategyManager.Instance.GetStrategy(StrategyType.BuyAndHold);
-                if (strategy == null)
-                {
-                    strategy = new BuyAndHold();
-                }
-
+                var strategy = new BuyAndHold();
                 var benchmark = new Dictionary<string, PortfolioSubject>();
                 benchmark.Add(assetCode, request.Benchmark);
 
-                var report = strategy.Run(benchmarkDataset, tradingCalendar, _property, benchmark, isBenchmark: true);
+                var report = strategy.Run(benchmarkDataset, tradingCalendar, property, benchmark, isBenchmark: true);
                 reports.Add(report);
-
             }
         }
 
