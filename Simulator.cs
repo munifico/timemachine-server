@@ -431,7 +431,7 @@ namespace TimeMachineServer
                     break;
             }
 
-            orderPrice = Math.Ceiling(orderPrice);
+            orderPrice = Math.Truncate(orderPrice * 100) / 100;  // 소수점 2자리 이후 버림
 
             // 수수료
             double commission = 0.0;
