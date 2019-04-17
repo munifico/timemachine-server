@@ -320,9 +320,7 @@ namespace TimeMachineServer
                 _report.Records.Last().TotalBalance : 0;
 
             // 오늘수익
-            // TODO: 이렇게 계산하면 안될 듯
-            var dailyReturn = 0 < _report.Records.Count ?
-                totalBalance - prevTotalBalance : 0;
+            var dailyReturn = recordDetails.Sum(x => x.Return);
 
             // 오늘 수익률
             var dailyReturnRatio = 0.0;
@@ -330,12 +328,12 @@ namespace TimeMachineServer
             {
                 case StrategyType.BuyAndHold:
                     {
-                        double openSum = 0.0;
+                        double closeSum = 0.0;
                         foreach (var detail in recordDetails)
                         {
-                            openSum += _portfolioDataset[detail.AssetCode][_currentDate].Open;
+                            closeSum += _portfolioDataset[detail.AssetCode][_currentDate].Close * GetVolume(detail.AssetCode);
                         }
-                        dailyReturnRatio = dailyReturn / openSum;
+                        dailyReturnRatio = dailyReturn / closeSum;
                     }
                     break;
                 default:
@@ -369,14 +367,15 @@ namespace TimeMachineServer
 
         private double GetStandardDeviation(List<double> values)
         {
-            double average = values.Average();
+            double average = values.Average(); // 수익률의평균
+
             double sumOfDerivation = 0;
             foreach (double value in values)
             {
-                sumOfDerivation += (value) * (value);
+                sumOfDerivation += Math.Pow(value - average, 2);
             }
             double sumOfDerivationAverage = sumOfDerivation / (values.Count - 1);
-            return Math.Sqrt(sumOfDerivationAverage - (average * average));
+            return Math.Sqrt(sumOfDerivationAverage);
         }
 
         #region LimitOrder
