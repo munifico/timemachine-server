@@ -67,7 +67,23 @@ namespace TimemachineServer.Controllers
 
                 foreach (var asset in request.Assets)
                 {
-                    if (asset.Exchange != "ETF")
+                    if (asset.Exchange == "INDEX")
+                    {
+                        var index = context.Indices
+                                            .Where(x => x.CreatedAt >= date && x.AssetCode == asset.AssetCode)
+                                            .OrderBy(x => x.CreatedAt)
+                                            .Take(10) // date가 실제 트레이딩 날짜가 아닐 수 있기 때문에 최대 10일 뒤의 데이터를 가져온다.(10일간 거래를 안할 수 없다는 가정)
+                                            .FirstOrDefault();
+
+                        response.Data.Add(new ResOpenPrice.Context
+                        {
+                            AssetCode = asset.AssetCode,
+                            AssetName = AssetManager.Instance.GetAssetName(asset.AssetCode),
+                            Exchange = asset.Exchange,
+                            OpenPrice = index.Open,
+                        });
+                    }
+                    else if (asset.Exchange != "ETF")
                     {
                         var stock = context.Stocks
                                             .Where(x => x.CreatedAt >= date && x.AssetCode == asset.AssetCode)
@@ -75,16 +91,11 @@ namespace TimemachineServer.Controllers
                                             .Take(10) // date가 실제 트레이딩 날짜가 아닐 수 있기 때문에 최대 10일 뒤의 데이터를 가져온다.(10일간 거래를 안할 수 없다는 가정)
                                             .FirstOrDefault();
 
-                        // var subject = new Subject()
-                        // {
-                        //     AssetCode = asset.AssetCode
-                        // };
-                        // PortfolioManager.Instance.AddToPortfolio(subject, date);
-
                         response.Data.Add(new ResOpenPrice.Context
                         {
                             AssetCode = asset.AssetCode,
                             AssetName = AssetManager.Instance.GetAssetName(asset.AssetCode),
+                            Exchange = asset.Exchange,
                             OpenPrice = stock.Open,
                         });
                     }

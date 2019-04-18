@@ -22,6 +22,7 @@ namespace TimemachineServer
         {
             public string AssetCode { get; set; }
             public string AssetName { get; set; }
+            public string Exchange { get; set; }
             public double OpenPrice { get; set; }
         }
     }
