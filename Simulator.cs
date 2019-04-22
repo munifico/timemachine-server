@@ -426,7 +426,7 @@ namespace TimeMachineServer
                 case SlippageType.Ratio:
                     orderPrice =
                         orderType == OrderType.Buy ?
-                        orderPrice * (1 + Property.Slippage / 100) : orderPrice * (1 - Property.Slippage / 100);
+                        orderPrice * (1 + (Property.Slippage / 2)) : orderPrice * (1 - (Property.Slippage / 2)); // 슬리피지 0.15입력하면 살 때, 팔 때 0.075씩 적용(1/2 적용)
                     break;
             }
 
