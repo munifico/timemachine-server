@@ -183,7 +183,8 @@ namespace TimeMachineServer
             foreach (var assetCode in _recordDetails.Keys)
             {
                 var initialBalance = Property.Capital * _portfolio[assetCode].Ratio;
-                var endBalance = initialBalance + _recordDetails[assetCode].Last().CumulativeReturn;
+                var endBalance = _recordDetails[assetCode].LastOrDefault() == null ?
+                    initialBalance : initialBalance + _recordDetails[assetCode].LastOrDefault().CumulativeReturn;
 
                 var summaryDetail = new SummaryDetail
                 {
