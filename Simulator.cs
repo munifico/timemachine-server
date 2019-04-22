@@ -440,7 +440,7 @@ namespace TimeMachineServer
                     commission = Property.Commission;
                     break;
                 case CommissionType.Ratio:
-                    commission = orderPrice * orderVolume * (Property.Commission / 100);
+                    commission = orderPrice * orderVolume * (Property.Commission);
                     break;
             }
 
