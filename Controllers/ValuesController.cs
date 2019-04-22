@@ -83,7 +83,8 @@ namespace TimemachineServer.Controllers
                             OpenPrice = index.Open,
                         });
                     }
-                    else if (asset.Exchange != "ETF")
+                    // else if (asset.Exchange != "ETF")
+                    else
                     {
                         var stock = context.Stocks
                                             .Where(x => x.CreatedAt >= date && x.AssetCode == asset.AssetCode)
