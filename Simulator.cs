@@ -186,6 +186,9 @@ namespace TimeMachineServer
                 var endBalance = _recordDetails[assetCode].LastOrDefault() == null ?
                     initialBalance : initialBalance + _recordDetails[assetCode].LastOrDefault().CumulativeReturn;
 
+                // var annualizedReturnRatio = Math.Pow(Math.Pow(_recordDetails[assetCode].Last().RatingBalance / _recordDetails[assetCode].First().RatingBalance, (1.0 / _tradingCalendar.Count)), 250.0) - 1.0;
+                // var volatilityRatio = GetStandardDeviation(_recordDetails[assetCode].Select(x => Convert.ToDouble(x.ReturnRatio)).ToList()) * Math.Sqrt(250);
+
                 var summaryDetail = new SummaryDetail
                 {
                     RelationalKey = relationalKey,
@@ -195,7 +198,10 @@ namespace TimeMachineServer
                     EndBalance = endBalance,
                     Commission = _report.Transactions[assetCode].Values.Sum(x => x.Sum(y => y.Commission)),
                     PeriodReturnRatio = (endBalance - initialBalance) / initialBalance,
+                    // AnnualizedReturnRatio = annualizedReturnRatio,
+                    // VolatilityRatio = volatilityRatio,
                     MddRatio = _holdStocks[assetCode].Mdd,
+                    // SharpeRatio = annualizedReturnRatio / volatilityRatio
                 };
 
                 summaryDetails.Add(summaryDetail);

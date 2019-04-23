@@ -28,6 +28,9 @@ namespace TimeMachineServer
         public double EndBalance { get; set; }
         public double Commission { get; set; }
         public double PeriodReturnRatio { get; set; }
+        public double AnnualizedReturnRatio { get; set; }
+        public double VolatilityRatio { get; set; }
         public double MddRatio { get; set; }
+        public double SharpeRatio { get; set; }
     }
 }
