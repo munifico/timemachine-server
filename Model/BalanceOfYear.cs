@@ -1,6 +1,6 @@
 namespace TimeMachineServer
 {
-    public class BalanceOfYear
+    public class BalanceOfPeriod
     {
         public double FirstDateBalance { get; set; }
         public double LastDateBalance { get; set; }

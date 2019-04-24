@@ -30,7 +30,8 @@ namespace TimeMachineServer
         private Dictionary<string, List<RecordDetail>> _recordDetails = new Dictionary<string, List<RecordDetail>>();
         private Dictionary<string, PortfolioSubject> _portfolio;
 
-        private Dictionary<int, BalanceOfYear> _balanceOfYears = new Dictionary<int, BalanceOfYear>();
+        private Dictionary<int, BalanceOfPeriod> _balanceOfYears = new Dictionary<int, BalanceOfPeriod>();
+        private Dictionary<string, BalanceOfPeriod> _balanceOfMonths = new Dictionary<string, BalanceOfPeriod>();
 
         public Report Run(StrategyBase strategy,
             Dictionary<string, Dictionary<DateTime, ITradingData>> portfolioDataset,
@@ -93,11 +94,20 @@ namespace TimeMachineServer
 
                 if (IsFirstTradingDateOfYear(_currentDate.Year))
                 {
-                    _balanceOfYears.Add(_currentDate.Year, new BalanceOfYear { FirstDateBalance = _report.Records.Last().TotalBalance });
+                    _balanceOfYears.Add(_currentDate.Year, new BalanceOfPeriod { FirstDateBalance = _report.Records.Last().TotalBalance });
                 }
                 else if (IsLastTradingDateOfYear(_currentDate.Year))
                 {
                     _balanceOfYears[_currentDate.Year].LastDateBalance = _report.Records.Last().TotalBalance;
+                }
+
+                if (IsFirstTradingDateOfMonth(_currentDate.Year, _currentDate.Month))
+                {
+                    _balanceOfMonths.Add(_currentDate.ToString("yyyy-MM"), new BalanceOfPeriod { FirstDateBalance = _report.Records.Last().TotalBalance });
+                }
+                else if (IsLastTradingDateOfMonth(_currentDate.Year, _currentDate.Month))
+                {
+                    _balanceOfMonths[_currentDate.ToString("yyyy-MM")].LastDateBalance = _report.Records.Last().TotalBalance;
                 }
             }
 
@@ -106,6 +116,7 @@ namespace TimeMachineServer
             var summaryDetails = CreateSummaryDetails(relationalKey);
             _report.Summary = CreateSummary(summaryDetails, relationalKey);
             _report.AnnualReturns = CreateAnnualReturns();
+            _report.MonthlyReturns = CreateMonthlyReturns();
 
             return _report;
         }
@@ -119,14 +130,31 @@ namespace TimeMachineServer
                 var annualReturn = new AnnualReturn
                 {
                     Year = balanceOfYear.Key,
-                    ReturnRatio = (balanceOfYear.Value.LastDateBalance - balanceOfYear.Value.FirstDateBalance) / balanceOfYear.Value.FirstDateBalance,
-                    TotalBalance = balanceOfYear.Value.LastDateBalance
+                    ReturnRatio = (balanceOfYear.Value.LastDateBalance - balanceOfYear.Value.FirstDateBalance) / balanceOfYear.Value.FirstDateBalance
                 };
 
                 annualReturns.Add(annualReturn);
             }
 
             return annualReturns;
+        }
+
+        private List<MonthlyReturn> CreateMonthlyReturns()
+        {
+            var monthlyReturns = new List<MonthlyReturn>();
+
+            foreach (var balanceOfMonth in _balanceOfMonths)
+            {
+                var monthlyReturn = new MonthlyReturn
+                {
+                    Date = balanceOfMonth.Key,
+                    ReturnRatio = (balanceOfMonth.Value.LastDateBalance - balanceOfMonth.Value.FirstDateBalance) / balanceOfMonth.Value.FirstDateBalance
+                };
+
+                monthlyReturns.Add(monthlyReturn);
+            }
+
+            return monthlyReturns;
         }
 
         public double GetMovingAverage(string assetCode, int days, PriceType priceType)
@@ -150,6 +178,16 @@ namespace TimeMachineServer
         public bool IsLastTradingDateOfYear(int year)
         {
             return _tradingCalendar.Where(x => x.Year == year).Max() == _currentDate;
+        }
+
+        public bool IsFirstTradingDateOfMonth(int year, int month)
+        {
+            return _tradingCalendar.Where(x => x.Year == year && x.Month == month).Min() == _currentDate;
+        }
+
+        public bool IsLastTradingDateOfMonth(int year, int month)
+        {
+            return _tradingCalendar.Where(x => x.Year == year && x.Month == month).Max() == _currentDate;
         }
 
         public double GetVolume(string assetCode)

@@ -1,3 +1,4 @@
+using System;
 using static TimeMachineServer.Constants;
 
 namespace TimeMachineServer
@@ -6,6 +7,11 @@ namespace TimeMachineServer
     {
         public int Year { get; set; }
         public double ReturnRatio { get; set; }
-        public double TotalBalance { get; set; }
+    }
+
+    public class MonthlyReturn
+    {
+        public string Date { get; set; }
+        public double ReturnRatio { get; set; }
     }
 }
