@@ -30,6 +30,8 @@ namespace TimeMachineServer
         private Dictionary<string, List<RecordDetail>> _recordDetails = new Dictionary<string, List<RecordDetail>>();
         private Dictionary<string, PortfolioSubject> _portfolio;
 
+        private Dictionary<int, BalanceOfYear> _balanceOfYears = new Dictionary<int, BalanceOfYear>();
+
         public Report Run(StrategyBase strategy,
             Dictionary<string, Dictionary<DateTime, ITradingData>> portfolioDataset,
             List<DateTime> tradingCalendar,
@@ -88,14 +90,43 @@ namespace TimeMachineServer
 
                 var record = CreateRecord(date, recordDetails);
                 _report.Records.Add(record);
+
+                if (IsFirstTradingDateOfYear(_currentDate.Year))
+                {
+                    _balanceOfYears.Add(_currentDate.Year, new BalanceOfYear { FirstDateBalance = _report.Records.Last().TotalBalance });
+                }
+                else if (IsLastTradingDateOfYear(_currentDate.Year))
+                {
+                    _balanceOfYears[_currentDate.Year].LastDateBalance = _report.Records.Last().TotalBalance;
+                }
             }
 
             // 통계생성
             string relationalKey = Guid.NewGuid().ToString();
             var summaryDetails = CreateSummaryDetails(relationalKey);
             _report.Summary = CreateSummary(summaryDetails, relationalKey);
+            _report.AnnualReturns = CreateAnnualReturns();
 
             return _report;
+        }
+
+        private List<AnnualReturn> CreateAnnualReturns()
+        {
+            var annualReturns = new List<AnnualReturn>();
+
+            foreach (var balanceOfYear in _balanceOfYears)
+            {
+                var annualReturn = new AnnualReturn
+                {
+                    Year = balanceOfYear.Key,
+                    ReturnRatio = (balanceOfYear.Value.LastDateBalance - balanceOfYear.Value.FirstDateBalance) / balanceOfYear.Value.FirstDateBalance,
+                    TotalBalance = balanceOfYear.Value.LastDateBalance
+                };
+
+                annualReturns.Add(annualReturn);
+            }
+
+            return annualReturns;
         }
 
         public double GetMovingAverage(string assetCode, int days, PriceType priceType)
@@ -109,6 +140,16 @@ namespace TimeMachineServer
             }
 
             return prices.Average();
+        }
+
+        public bool IsFirstTradingDateOfYear(int year)
+        {
+            return _tradingCalendar.Where(x => x.Year == year).Min() == _currentDate;
+        }
+
+        public bool IsLastTradingDateOfYear(int year)
+        {
+            return _tradingCalendar.Where(x => x.Year == year).Max() == _currentDate;
         }
 
         public double GetVolume(string assetCode)

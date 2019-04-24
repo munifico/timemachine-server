@@ -16,6 +16,8 @@ namespace TimeMachineServer
 
         public Summary Summary { get; set; }
         public List<Record> Records { get; set; } = new List<Record>();
+        public List<AnnualReturn> AnnualReturns { get; set; } = new List<AnnualReturn>();
+
         public Dictionary<string, Dictionary<DateTime, List<Transaction>>> Transactions { get; set; }
             = new Dictionary<string, Dictionary<DateTime, List<Transaction>>>();
     }
