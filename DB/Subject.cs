@@ -37,6 +37,22 @@ namespace TimeMachineServer.DB
 
         [Column("div_yield")]
         public double? DivYield { get; set; }
+
+        [Column("recent_volatility_1_year")]
+        public double? RecentVolatility1Year { get; set; }
+
+        [Column("recent_volatility_3_year")]
+        public double? RecentVolatility3Year { get; set; }
+
+        [Column("recent_volatility_5_year")]
+        public double? RecentVolatility5Year { get; set; }
+
+        [Column("recent_volatility_7_year")]
+        public double? RecentVolatility7Year { get; set; }
+
+        [Column("recent_volatility_10_year")]
+        public double? RecentVolatility10Year { get; set; }
+
         #endregion
 
         #region Data Grid
