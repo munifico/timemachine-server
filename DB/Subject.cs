@@ -1,6 +1,8 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Newtonsoft.Json;
+using TimeMachineServer.Helper;
 
 namespace TimeMachineServer.DB
 {
@@ -8,6 +10,11 @@ namespace TimeMachineServer.DB
     public class Subject : IEquatable<Subject>
     {
         #region Table Mapping
+        [Column("first_date")]
+        [DataType(DataType.Date)]
+        [JsonConverter(typeof(JsonDateConverter))]
+        public DateTime FirstDate { get; set; }
+
         [Column("asset_code")]
         public string AssetCode { get; set; }
 

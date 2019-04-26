@@ -59,6 +59,12 @@ namespace TimemachineServer
             UniverseManager.Instance.Initialize();
             AssetManager.Instance.AddAsset("JP225", "NIKKEI225");
 
+            // Task.Run(() =>
+            // {
+            //     var tempVolatilityUpdate = new TempVolatilityUpdate();
+            //     tempVolatilityUpdate.Run();
+            // });
+
             app.UseCors(policyName);
             app.UseHttpsRedirection();
             app.UseMvc();

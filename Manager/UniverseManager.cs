@@ -22,7 +22,7 @@ namespace TimeMachineServer
         {
             using (var context = new QTContext())
             {
-                universe = context.Universe.ToList();
+                universe = context.Universe.Where(x => x.FirstDate != null).ToList();
 
                 universe.ForEach(x =>
                 {
