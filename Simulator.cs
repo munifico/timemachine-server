@@ -368,10 +368,14 @@ namespace TimeMachineServer
                         if (_report.Transactions[assetCode].ContainsKey(_currentDate))
                         {
                             var transaction = _report.Transactions[assetCode][_currentDate];
-                            var sellValue = transaction.Where(x => x.Side == OrderType.Sell).Sum(x => x.Price * x.Volume); // 당일매도금액
-                            var buyValue = transaction.Where(x => x.Side == OrderType.Buy).Sum(x => x.Price * x.Volume); // 당일매수금액
-                            var dailyReturnRatio = (ratingBalance + sellValue) / (prevRatingBalane + buyValue) - 1;
 
+                            // 당일매도금액
+                            var sellValue = transaction.Where(x => x.Side == OrderType.Sell).Sum(x => x.Price * x.Volume) - transaction.Where(x => x.Side == OrderType.Sell).Sum(x => x.Commission);
+
+                            // 당일매수금액
+                            var buyValue = transaction.Where(x => x.Side == OrderType.Buy).Sum(x => x.Price * x.Volume) + transaction.Where(x => x.Side == OrderType.Buy).Sum(x => x.Commission);
+
+                            var dailyReturnRatio = (ratingBalance + sellValue) / (prevRatingBalane + buyValue) - 1;
                             dailyReturn = (ratingBalance + sellValue) - (prevRatingBalane + buyValue);
                         }
                     }
@@ -530,12 +534,24 @@ namespace TimeMachineServer
                     break;
             }
 
+            var low = subjectDataset[_currentDate].Low;
+            var high = subjectDataset[_currentDate].High;
+
+            orderPrice = Math.Max(low, orderPrice);
+            orderPrice = Math.Min(high, orderPrice);
+
             var orderValue = (orderPrice * orderVolume);
 
             if (OrderType.Buy == orderType)
             {
                 if (_balance < orderValue + commission)
                 {
+                    --orderVolume; // 수수료 때문에 밸런스를 초과하는 경우
+                    if (0 >= orderVolume)
+                    {
+                        return false;
+                    }
+
                     // 미수금 사용하지 않는 모드에서는 거래 실패
                     if (!Property.UseOutstandingBalance)
                     {
@@ -554,12 +570,6 @@ namespace TimeMachineServer
                     throw new NotEnoughVolumeException(assetCode, _holdStocks[assetCode].Volume, orderVolume, subjectDataset[_currentDate].CreatedAt);
                 }
             }
-
-            var low = subjectDataset[_currentDate].Low;
-            var high = subjectDataset[_currentDate].High;
-
-            orderPrice = Math.Max(low, orderPrice);
-            orderPrice = Math.Min(high, orderPrice);
 
             if (orderPrice >= low && orderPrice <= high)
             {
