@@ -90,20 +90,20 @@ namespace TimeMachineServer
                         recordDetails.Add(recordDetail);
                         _tradingIndex[assetCode]++;
                     }
-                    else
-                    {
-                        var prevRecord = _report.Records.OrderByDescending(x => x.Date).Take(1).FirstOrDefault();
-                        var recordDetail = new RecordDetail()
-                        {
-                            AssetCode = assetCode,
-                            RatingBalance = prevRecord.RatingBalance,
-                            Return = 0,
-                            ReturnRatio = 0,
-                            CumulativeReturn = prevRecord.CumulativeReturn
-                        };
-                        _recordDetails[assetCode].Add(recordDetail);
-                        recordDetails.Add(recordDetail);
-                    }
+                    // else
+                    // {
+                    //     var prevRecord = _report.Records.OrderByDescending(x => x.Date).Take(1).FirstOrDefault();
+                    //     var recordDetail = new RecordDetail()
+                    //     {
+                    //         AssetCode = assetCode,
+                    //         RatingBalance = prevRecord.RatingBalance,
+                    //         Return = 0,
+                    //         ReturnRatio = 0,
+                    //         CumulativeReturn = prevRecord.CumulativeReturn
+                    //     };
+                    //     _recordDetails[assetCode].Add(recordDetail);
+                    //     recordDetails.Add(recordDetail);
+                    // }
                 }
 
                 var record = CreateRecord(date, recordDetails);
@@ -340,17 +340,17 @@ namespace TimeMachineServer
         // 개별 종목 계산
         private RecordDetail CreateRecordDetail(string assetCode)
         {
-            // var index = _tradingIndex[assetCode];
+            var index = _tradingIndex[assetCode];
 
             // 전일 누적수익
             var prevCumulativeReturn = IsFirstDate(assetCode) ?
-                // 0 : _recordDetails[assetCode][index - 1].CumulativeReturn;
-                0 : _recordDetails[assetCode][_recordDetails[assetCode].Count - 1].CumulativeReturn;
+                0 : _recordDetails[assetCode][index - 1].CumulativeReturn;
+            // 0 : _recordDetails[assetCode][_recordDetails[assetCode].Count - 1].CumulativeReturn;
 
             // 전일 평가금액
             var prevRatingBalane = IsFirstDate(assetCode) ?
-                //  0 : _recordDetails[assetCode][index - 1].RatingBalance;
-                0 : _recordDetails[assetCode][_recordDetails[assetCode].Count - 1].RatingBalance;
+                0 : _recordDetails[assetCode][index - 1].RatingBalance;
+            // 0 : _recordDetails[assetCode][_recordDetails[assetCode].Count - 1].RatingBalance;
 
             // 평가금액
             var ratingBalance = _portfolioDataset[assetCode][_currentDate].Close * _holdStocks[assetCode].Volume;
@@ -440,11 +440,12 @@ namespace TimeMachineServer
                         double closeSum = 0.0;
                         foreach (var detail in recordDetails)
                         {
-                            if (!IsFirstDate(detail.AssetCode))
-                            {
-                                // closeSum += _portfolioDataset[detail.AssetCode][_currentDate].Close * GetVolume(detail.AssetCode);
-                                closeSum += GetPrice(detail.AssetCode, PriceType.Close, -1) * GetVolume(detail.AssetCode); // 이미 _tradingIndex를 증가시켜서 -1이 오늘
-                            }
+                            closeSum += _portfolioDataset[detail.AssetCode][_currentDate].Close * GetVolume(detail.AssetCode);
+
+                            // if (!IsFirstDate(detail.AssetCode))
+                            // {
+                            //     closeSum += GetPrice(detail.AssetCode, PriceType.Close, -1) * GetVolume(detail.AssetCode); // 이미 _tradingIndex를 증가시켜서 -1이 오늘
+                            // }
                         }
                         dailyReturnRatio = dailyReturn / closeSum;
                     }
