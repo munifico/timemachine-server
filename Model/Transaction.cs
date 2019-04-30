@@ -1,4 +1,7 @@
 using System;
+using System.ComponentModel.DataAnnotations;
+using Newtonsoft.Json;
+using TimeMachineServer.Helper;
 using static TimeMachineServer.Constants;
 
 namespace TimeMachineServer
@@ -17,7 +20,10 @@ namespace TimeMachineServer
             CreditBalance = creditBalance;
         }
 
+        [DataType(DataType.Date)]
+        [JsonConverter(typeof(JsonDateConverter))]
         public DateTime Date { get; }
+
         public string AssetName { get; }
         public string AssetCode { get; }
         public OrderType Side { get; }
