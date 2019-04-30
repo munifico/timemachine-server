@@ -94,17 +94,20 @@ namespace TimeMachineServer
                     {
                         // var prevRecord = _report.Records.OrderByDescending(x => x.Date).Take(1).FirstOrDefault();
                         var prevRecordDetail = _recordDetails[assetCode].OrderByDescending(x => x.Date).Take(1).FirstOrDefault();
-                        var recordDetail = new RecordDetail()
+                        if (prevRecordDetail != null)
                         {
-                            Date = _currentDate,
-                            AssetCode = assetCode,
-                            RatingBalance = prevRecordDetail.RatingBalance,
-                            Return = 0,
-                            ReturnRatio = 0,
-                            CumulativeReturn = prevRecordDetail.CumulativeReturn
-                        };
-                        _recordDetails[assetCode].Add(recordDetail);
-                        recordDetails.Add(recordDetail);
+                            var recordDetail = new RecordDetail()
+                            {
+                                Date = _currentDate,
+                                AssetCode = assetCode,
+                                RatingBalance = prevRecordDetail.RatingBalance,
+                                Return = 0,
+                                ReturnRatio = 0,
+                                CumulativeReturn = prevRecordDetail.CumulativeReturn
+                            };
+                            _recordDetails[assetCode].Add(recordDetail);
+                            recordDetails.Add(recordDetail);
+                        }
                     }
                 }
 
