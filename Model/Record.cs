@@ -7,6 +7,7 @@ namespace TimeMachineServer
 {
     public class RecordDetail
     {
+        public DateTime Date { get; set; }
         public string AssetCode { get; set; }
         public double RatingBalance { get; set; }
         public double Return { get; set; }
