@@ -25,6 +25,7 @@ namespace TimeMachineServer
         private Dictionary<string, HoldStock> _holdStocks = new Dictionary<string, HoldStock>();
         private double _highestTotalBalance = 0;
         private double _balance = 0;
+        private double _balanceSnapshot = 0;
         private double _outstandingBalance = 0;
 
         private Dictionary<string, List<RecordDetail>> _recordDetails = new Dictionary<string, List<RecordDetail>>();
@@ -49,6 +50,7 @@ namespace TimeMachineServer
             Property = property;
 
             _balance = property.Capital;
+
             _highestTotalBalance = property.Capital;
 
             foreach (var assetCode in _portfolioDataset.Keys)
@@ -72,6 +74,7 @@ namespace TimeMachineServer
             foreach (var date in tradingCalendar)
             {
                 _currentDate = date; // 트레이딩 달력기준 날짜
+                _balanceSnapshot = _balance;
 
                 var recordDetails = new List<RecordDetail>();
                 foreach (var assetCode in _portfolioDataset.Keys)
@@ -86,6 +89,20 @@ namespace TimeMachineServer
 
                         recordDetails.Add(recordDetail);
                         _tradingIndex[assetCode]++;
+                    }
+                    else
+                    {
+                        var prevRecord = _report.Records.OrderByDescending(x => x.Date).Take(1).FirstOrDefault();
+                        var recordDetail = new RecordDetail()
+                        {
+                            AssetCode = assetCode,
+                            RatingBalance = prevRecord.RatingBalance,
+                            Return = 0,
+                            ReturnRatio = 0,
+                            CumulativeReturn = prevRecord.CumulativeReturn
+                        };
+                        _recordDetails[assetCode].Add(recordDetail);
+                        recordDetails.Add(recordDetail);
                     }
                 }
 
@@ -323,15 +340,17 @@ namespace TimeMachineServer
         // 개별 종목 계산
         private RecordDetail CreateRecordDetail(string assetCode)
         {
-            var index = _tradingIndex[assetCode];
+            // var index = _tradingIndex[assetCode];
 
             // 전일 누적수익
             var prevCumulativeReturn = IsFirstDate(assetCode) ?
-                0 : _recordDetails[assetCode][index - 1].CumulativeReturn;
+                // 0 : _recordDetails[assetCode][index - 1].CumulativeReturn;
+                0 : _recordDetails[assetCode][_recordDetails[assetCode].Count - 1].CumulativeReturn;
 
             // 전일 평가금액
             var prevRatingBalane = IsFirstDate(assetCode) ?
-                 0 : _recordDetails[assetCode][index - 1].RatingBalance;
+                //  0 : _recordDetails[assetCode][index - 1].RatingBalance;
+                0 : _recordDetails[assetCode][_recordDetails[assetCode].Count - 1].RatingBalance;
 
             // 평가금액
             var ratingBalance = _portfolioDataset[assetCode][_currentDate].Close * _holdStocks[assetCode].Volume;
@@ -421,7 +440,11 @@ namespace TimeMachineServer
                         double closeSum = 0.0;
                         foreach (var detail in recordDetails)
                         {
-                            closeSum += _portfolioDataset[detail.AssetCode][_currentDate].Close * GetVolume(detail.AssetCode);
+                            if (!IsFirstDate(detail.AssetCode))
+                            {
+                                // closeSum += _portfolioDataset[detail.AssetCode][_currentDate].Close * GetVolume(detail.AssetCode);
+                                closeSum += GetPrice(detail.AssetCode, PriceType.Close, -1) * GetVolume(detail.AssetCode); // 이미 _tradingIndex를 증가시켜서 -1이 오늘
+                            }
                         }
                         dailyReturnRatio = dailyReturn / closeSum;
                     }
@@ -471,12 +494,15 @@ namespace TimeMachineServer
         #region LimitOrder
         public bool LimitOrderPercent(string assetCode, OrderType orderType, double orderPrice, double rate)
         {
-            double orderVolume = (_balance * rate) / orderPrice;
+            orderPrice = ApplySlippage(orderPrice, orderType);
 
-            return LimitOrder(assetCode, orderType, orderPrice, orderVolume);
+            // double orderVolume = (_balance * rate) / orderPrice;
+            double orderVolume = (_balanceSnapshot * rate) / orderPrice;
+
+            return LimitOrder(assetCode, orderType, orderPrice, orderVolume, applySlippage: false);
         }
 
-        public bool LimitOrder(string assetCode, OrderType orderType, double orderPrice, double orderVolume)
+        public bool LimitOrder(string assetCode, OrderType orderType, double orderPrice, double orderVolume, bool applySlippage = true)
         {
             // 1주미만 거래허용하지 않으면 소수점 버림
             if (!Property.UsePointVolume)
@@ -505,19 +531,9 @@ namespace TimeMachineServer
                 throw new NoTradingDataExistsException(assetCode, _currentDate);
             }
 
-            // 슬리피지 적용
-            switch (Property.SlippageType)
+            if (applySlippage)
             {
-                case SlippageType.Fixed:
-                    orderPrice =
-                        orderType == OrderType.Buy ?
-                        orderPrice + Property.Slippage : orderPrice - Property.Slippage;
-                    break;
-                case SlippageType.Ratio:
-                    orderPrice =
-                        orderType == OrderType.Buy ?
-                        orderPrice * (1 + (Property.Slippage / 2)) : orderPrice * (1 - (Property.Slippage / 2)); // 슬리피지 0.15입력하면 살 때, 팔 때 0.075씩 적용(1/2 적용)
-                    break;
+                orderPrice = ApplySlippage(orderPrice, orderType);
             }
 
             orderPrice = Math.Truncate(orderPrice * 100) / 100;  // 소수점 2자리 이후 버림
@@ -612,6 +628,26 @@ namespace TimeMachineServer
             }
 
             return true;
+        }
+
+        private double ApplySlippage(double orderPrice, OrderType orderType)
+        {
+            // 슬리피지 적용
+            switch (Property.SlippageType)
+            {
+                case SlippageType.Fixed:
+                    orderPrice =
+                        orderType == OrderType.Buy ?
+                        orderPrice + Property.Slippage : orderPrice - Property.Slippage;
+                    break;
+                case SlippageType.Ratio:
+                    orderPrice =
+                        orderType == OrderType.Buy ?
+                        orderPrice * (1 + (Property.Slippage / 2)) : orderPrice * (1 - (Property.Slippage / 2)); // 슬리피지 0.15입력하면 살 때, 팔 때 0.075씩 적용(1/2 적용)
+                    break;
+            }
+
+            return orderPrice;
         }
 
         private double GetCommission(double orderPrice, double orderVolume)
