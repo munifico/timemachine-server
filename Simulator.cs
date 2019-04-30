@@ -523,16 +523,7 @@ namespace TimeMachineServer
             orderPrice = Math.Truncate(orderPrice * 100) / 100;  // 소수점 2자리 이후 버림
 
             // 수수료
-            double commission = 0.0;
-            switch (Property.CommissionType)
-            {
-                case CommissionType.Fixed:
-                    commission = Property.Commission;
-                    break;
-                case CommissionType.Ratio:
-                    commission = orderPrice * orderVolume * (Property.Commission);
-                    break;
-            }
+            double commission = GetCommission(orderPrice, orderVolume);
 
             var low = subjectDataset[_currentDate].Low;
             var high = subjectDataset[_currentDate].High;
@@ -546,20 +537,33 @@ namespace TimeMachineServer
             {
                 if (_balance < orderValue + commission)
                 {
-                    --orderVolume; // 수수료 때문에 밸런스를 초과하는 경우
+                    // 수수료 때문에 밸런스를 초과하는 경우
+                    double overbalance = (orderValue + commission) - _balance;
+                    orderVolume -= ((overbalance / orderPrice) + 1);
+                    // 1주미만 거래허용하지 않으면 소수점 버림
+                    if (!Property.UsePointVolume)
+                    {
+                        orderVolume = Math.Truncate(orderVolume);
+                    }
+                    orderValue = (orderPrice * orderVolume);
+                    commission = GetCommission(orderPrice, orderVolume); // 수수료 다시 계산
+
                     if (0 >= orderVolume)
                     {
                         return false;
                     }
 
-                    // 미수금 사용하지 않는 모드에서는 거래 실패
-                    if (!Property.UseOutstandingBalance)
+                    if (_balance < orderValue + commission)
                     {
-                        return false;
-                    }
-                    else
-                    {
-                        _outstandingBalance += orderValue - _balance;
+                        // 미수금 사용하지 않는 모드에서는 거래 실패
+                        if (!Property.UseOutstandingBalance)
+                        {
+                            return false;
+                        }
+                        else
+                        {
+                            _outstandingBalance += orderValue - _balance;
+                        }
                     }
                 }
             }
@@ -609,6 +613,24 @@ namespace TimeMachineServer
 
             return true;
         }
+
+        private double GetCommission(double orderPrice, double orderVolume)
+        {
+            // 수수료
+            double commission = 0.0;
+            switch (Property.CommissionType)
+            {
+                case CommissionType.Fixed:
+                    commission = Property.Commission;
+                    break;
+                case CommissionType.Ratio:
+                    commission = orderPrice * orderVolume * (Property.Commission);
+                    break;
+            }
+
+            return commission;
+        }
+
         #endregion
     }
 }
