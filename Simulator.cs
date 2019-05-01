@@ -453,7 +453,7 @@ namespace TimeMachineServer
                                 closeSum += GetPrice(detail.AssetCode, PriceType.Close, -1) * GetVolume(detail.AssetCode); // 이미 _tradingIndex를 증가시켜서 -1이 오늘
                             }
                         }
-                        dailyReturnRatio = dailyReturn / closeSum;
+                        dailyReturnRatio = (0 < dailyReturn && 0 < closeSum) ? dailyReturn / closeSum : 0;
                     }
                     break;
                 default:
