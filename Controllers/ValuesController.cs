@@ -16,7 +16,7 @@ namespace TimemachineServer.Controllers
     [ApiController]
     public class ValuesController : ControllerBase
     {
-        // private BacktestingProperty _property;
+        private bool _analyzing = false;
 
         // GET api/values
         [HttpGet]
@@ -114,24 +114,56 @@ namespace TimemachineServer.Controllers
         }
 
         [HttpPost]
-        public void AnalyzeAllPortfolio([FromBody] ReqAnalyzePortfolio request)
+        public async Task<ActionResult<Dictionary<string, List<Trend>>>> AnalyzeAllPortfolio([FromBody] ReqAnalyzePortfolio request)
         {
-            var analyzer = new Analyzer();
-            var reports = new Dictionary<string, List<Report>>(); // key: StrategyType
-
-            foreach (var subject in UniverseManager.Instance.GetUniverse(null))
+            return await Task.Run(() =>
             {
-                request.Portfolio = new List<PortfolioSubject>();
-                request.Portfolio.Add(new PortfolioSubject()
-                {
-                    AssetCode = subject.AssetCode,
-                    Volume = 1,
-                    Ratio = 1,
-                });
+                var analyzer = new Analyzer();
+                var reports = new Dictionary<string, List<Trend>>(); // key: StrategyType
 
-                var results = analyzer.AnalyzePortfolio(request, analyzeBenchmark: false);
-                // Console.WriteLine
-            }
+                foreach (var subject in UniverseManager.Instance.GetUniverse(null))
+                {
+                    request.Portfolio = new List<PortfolioSubject>();
+                    request.Portfolio.Add(new PortfolioSubject()
+                    {
+                        AssetCode = subject.AssetCode,
+                        Volume = 1,
+                        Ratio = 1,
+                    });
+
+                    foreach (var report in analyzer.AnalyzePortfolio(request, analyzeBenchmark: false))
+                    {
+                        var strategyType = report.StrategyType;
+
+                        var trend = new Trend()
+                        {
+                            AssetCode = subject.AssetCode,
+                            AssetName = subject.AssetName,
+                            InitialBalance = report.Summary.InitialBalance,
+                            EndBalance = report.Summary.EndBalance,
+                            Commission = report.Summary.Commission,
+                            PeriodReturnRatio = report.Summary.PeriodReturnRatio,
+                            AnnualizedReturnRatio = report.Summary.AnnualizedReturnRatio,
+                            VolatilityRatio = report.Summary.VolatilityRatio,
+                            MddRatio = report.Summary.MddRatio,
+                            SharpeRatio = report.Summary.SharpeRatio
+                        };
+
+                        if (reports.ContainsKey(strategyType))
+                        {
+                            reports[strategyType].Add(trend);
+                        }
+                        else
+                        {
+                            reports.Add(strategyType, new List<Trend> { trend });
+                        }
+                    }
+
+                    Console.WriteLine(subject.AssetCode);
+                }
+
+                return reports;
+            });
         }
     }
 }
