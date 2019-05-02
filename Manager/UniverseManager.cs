@@ -42,5 +42,10 @@ namespace TimeMachineServer
                 return universe.Where(x => x.Exchange == exchange).ToList();
             }
         }
+
+        public Subject FindUniverse(string assetCode)
+        {
+            return universe.Where(x => x.AssetCode == assetCode).FirstOrDefault();
+        }
     }
 }

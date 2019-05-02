@@ -6,6 +6,7 @@ namespace TimeMachineServer
     {
         public string AssetCode { get; set; }
         public string AssetName { get; set; }
+        public string Exchange { get; set; }
         public double InitialBalance { get; set; }
         public double EndBalance { get; set; }
         public double Commission { get; set; }
@@ -14,6 +15,10 @@ namespace TimeMachineServer
         public double VolatilityRatio { get; set; }
         public double MddRatio { get; set; }
         public double SharpeRatio { get; set; }
+        public double? Per { get; set; }
+        public double? Pbr { get; set; }
+        public double? EvEvitda { get; set; }
+        public double? DivYield { get; set; }
     }
 
     public class Summary

@@ -139,6 +139,7 @@ namespace TimemachineServer.Controllers
                         {
                             AssetCode = subject.AssetCode,
                             AssetName = subject.AssetName,
+                            Exchange = subject.Exchange,
                             InitialBalance = report.Summary.InitialBalance,
                             EndBalance = report.Summary.EndBalance,
                             Commission = report.Summary.Commission,
@@ -146,7 +147,11 @@ namespace TimemachineServer.Controllers
                             AnnualizedReturnRatio = report.Summary.AnnualizedReturnRatio,
                             VolatilityRatio = report.Summary.VolatilityRatio,
                             MddRatio = report.Summary.MddRatio,
-                            SharpeRatio = report.Summary.SharpeRatio
+                            SharpeRatio = report.Summary.SharpeRatio,
+                            Per = UniverseManager.Instance.FindUniverse(subject.AssetCode).Per,
+                            Pbr = UniverseManager.Instance.FindUniverse(subject.AssetCode).Pbr,
+                            EvEvitda = UniverseManager.Instance.FindUniverse(subject.AssetCode).EvEvitda,
+                            DivYield = UniverseManager.Instance.FindUniverse(subject.AssetCode).DivYield
                         };
 
                         if (reports.ContainsKey(strategyType))
