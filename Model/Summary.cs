@@ -1,4 +1,8 @@
+using System;
 using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
+using Newtonsoft.Json;
+using TimeMachineServer.Helper;
 
 namespace TimeMachineServer
 {
@@ -7,6 +11,12 @@ namespace TimeMachineServer
         public string AssetCode { get; set; }
         public string AssetName { get; set; }
         public string Exchange { get; set; }
+        public double MarketCap { get; set; }
+
+        [DataType(DataType.Date)]
+        [JsonConverter(typeof(JsonDateConverter))]
+        public DateTime FirstDate { get; set; }
+
         public double InitialBalance { get; set; }
         public double EndBalance { get; set; }
         public double Commission { get; set; }

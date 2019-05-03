@@ -140,6 +140,8 @@ namespace TimemachineServer.Controllers
                             AssetCode = subject.AssetCode,
                             AssetName = subject.AssetName,
                             Exchange = subject.Exchange,
+                            MarketCap = subject.MarketCap,
+                            FirstDate = subject.FirstDate,
                             InitialBalance = report.Summary.InitialBalance,
                             EndBalance = report.Summary.EndBalance,
                             Commission = report.Summary.Commission,
