@@ -1,4 +1,8 @@
+using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using Newtonsoft.Json;
+using TimeMachineServer.Helper;
 
 namespace TimemachineServer
 {
@@ -23,6 +27,11 @@ namespace TimemachineServer
             public string AssetCode { get; set; }
             public string AssetName { get; set; }
             public string Exchange { get; set; }
+
+            [DataType(DataType.Date)]
+            [JsonConverter(typeof(JsonDateConverter))]
+            public DateTime Date { get; set; }
+
             public double OpenPrice { get; set; }
         }
     }

@@ -59,6 +59,11 @@ namespace TimemachineServer.Controllers
         [HttpPost]
         public ActionResult<ResOpenPrice> OpenPrice([FromBody] ReqOpenPrice request)
         {
+            if (!Validate(request.StartDate))
+            {
+                return null;
+            }
+
             var date = DateTime.ParseExact(request.StartDate, "yyyy-MM-dd", CultureInfo.InvariantCulture);
 
             using (var context = new QTContext())
@@ -74,16 +79,42 @@ namespace TimemachineServer.Controllers
                                             .OrderBy(x => x.CreatedAt)
                                             .Take(10) // date가 실제 트레이딩 날짜가 아닐 수 있기 때문에 최대 10일 뒤의 데이터를 가져온다.(10일간 거래를 안할 수 없다는 가정)
                                             .FirstOrDefault();
+                        var indexCopy = new Index()
+                        {
+                            CreatedAt = index.CreatedAt,
+                            AssetCode = index.AssetCode,
+                            AssetName = index.AssetName,
+                            Close = index.Close,
+                            Open = index.Open,
+                            High = index.High,
+                            Low = index.Low,
+                            Volume = index.Volume
+                        };
+
+                        // 분할정보
+                        var splits = context.Splits.Where(x => x.AssetCode == asset.AssetCode).ToList();
+
+                        // 분할적용
+                        splits.ForEach(split =>
+                        {
+                            if (indexCopy.CreatedAt < split.SplitDate)
+                            {
+                                indexCopy.Open = indexCopy.Open / split.SplitRatio;
+                                indexCopy.High = indexCopy.High / split.SplitRatio;
+                                indexCopy.Low = indexCopy.Low / split.SplitRatio;
+                                indexCopy.Close = indexCopy.Close / split.SplitRatio;
+                            }
+                        });
 
                         response.Data.Add(new ResOpenPrice.Context
                         {
                             AssetCode = asset.AssetCode,
                             AssetName = AssetManager.Instance.GetAssetName(asset.AssetCode),
                             Exchange = asset.Exchange,
-                            OpenPrice = index.Open,
+                            Date = indexCopy.CreatedAt,
+                            OpenPrice = indexCopy.Open,
                         });
                     }
-                    // else if (asset.Exchange != "ETF")
                     else
                     {
                         var stock = context.Stocks
@@ -91,13 +122,39 @@ namespace TimemachineServer.Controllers
                                             .OrderBy(x => x.CreatedAt)
                                             .Take(10) // date가 실제 트레이딩 날짜가 아닐 수 있기 때문에 최대 10일 뒤의 데이터를 가져온다.(10일간 거래를 안할 수 없다는 가정)
                                             .FirstOrDefault();
+                        var stockCopy = new Stock
+                        {
+                            CreatedAt = stock.CreatedAt,
+                            AssetCode = stock.AssetCode,
+                            Close = stock.Close,
+                            Open = stock.Open,
+                            High = stock.High,
+                            Low = stock.Low,
+                            Volume = stock.Volume
+                        };
+
+                        // 분할정보
+                        var splits = context.Splits.Where(x => x.AssetCode == asset.AssetCode).ToList();
+
+                        // 분할적용
+                        splits.ForEach(split =>
+                        {
+                            if (stockCopy.CreatedAt < split.SplitDate)
+                            {
+                                stockCopy.Open = stockCopy.Open / split.SplitRatio;
+                                stockCopy.High = stockCopy.High / split.SplitRatio;
+                                stockCopy.Low = stockCopy.Low / split.SplitRatio;
+                                stockCopy.Close = stockCopy.Close / split.SplitRatio;
+                            }
+                        });
 
                         response.Data.Add(new ResOpenPrice.Context
                         {
                             AssetCode = asset.AssetCode,
                             AssetName = AssetManager.Instance.GetAssetName(asset.AssetCode),
                             Exchange = asset.Exchange,
-                            OpenPrice = stock.Open,
+                            Date = stockCopy.CreatedAt,
+                            OpenPrice = stockCopy.Open,
                         });
                     }
                 }
@@ -171,6 +228,12 @@ namespace TimemachineServer.Controllers
 
                 return reports;
             });
+        }
+
+        private bool Validate(string date)
+        {
+            DateTime temp;
+            return DateTime.TryParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out temp);
         }
     }
 }

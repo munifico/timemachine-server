@@ -59,6 +59,16 @@ namespace TimemachineServer
                     // 원본
                     var stock = context.Stocks.Where(x => x.AssetCode == subject.AssetCode &&
                         x.CreatedAt >= startDate && x.CreatedAt <= endDate).ToList();
+                    var stockCopy = stock.Select(x => new Stock
+                    {
+                        CreatedAt = x.CreatedAt,
+                        AssetCode = x.AssetCode,
+                        Close = x.Close,
+                        Open = x.Open,
+                        High = x.High,
+                        Low = x.Low,
+                        Volume = x.Volume
+                    }).ToList();
 
                     // 분할정보
                     var splits = context.Splits.Where(x => x.AssetCode == subject.AssetCode).ToList();
@@ -66,7 +76,7 @@ namespace TimemachineServer
                     // 분할적용
                     splits.ForEach(split =>
                     {
-                        foreach (var s in stock.Where(x => x.CreatedAt < split.SplitDate))
+                        foreach (var s in stockCopy.Where(x => x.CreatedAt < split.SplitDate))
                         {
                             s.Open = s.Open / split.SplitRatio;
                             s.High = s.High / split.SplitRatio;
@@ -75,7 +85,7 @@ namespace TimemachineServer
                         }
                     });
 
-                    stock.ForEach(x => tradingDataset.Add(x.CreatedAt, x));
+                    stockCopy.ForEach(x => tradingDataset.Add(x.CreatedAt, x));
                 }
 
                 portfolioDataset.Add(subject.AssetCode, tradingDataset);
