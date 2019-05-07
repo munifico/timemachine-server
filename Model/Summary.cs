@@ -11,6 +11,8 @@ namespace TimeMachineServer
         public string AssetCode { get; set; }
         public string AssetName { get; set; }
         public string Exchange { get; set; }
+        public string Sector { get; set; }
+        public string Industry { get; set; }
         public double MarketCap { get; set; }
 
         [DataType(DataType.Date)]
