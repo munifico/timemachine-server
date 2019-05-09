@@ -6,7 +6,7 @@ using TimeMachineServer.Helper;
 
 namespace TimeMachineServer.DB
 {
-    [Table("japan_universe")]
+    [Table("universe")]
     public class Subject : IEquatable<Subject>
     {
         #region Table Mapping
@@ -23,6 +23,9 @@ namespace TimeMachineServer.DB
 
         [Column("exchange")]
         public string Exchange { get; set; }
+
+        [Column("country")]
+        public string Country { get; set; }
 
         [Column("gics_sector")]
         public string Sector { get; set; }

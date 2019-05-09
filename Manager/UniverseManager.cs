@@ -31,15 +31,15 @@ namespace TimeMachineServer
             }
         }
 
-        public List<Subject> GetUniverse(string exchange)
+        public List<Subject> GetUniverse(string country, string exchange)
         {
             if (exchange == null)
             {
-                return universe.ToList();
+                return universe.Where(x => x.Country == country).ToList();
             }
             else
             {
-                return universe.Where(x => x.Exchange == exchange).ToList();
+                return universe.Where(x => x.Country == country && x.Exchange == exchange).ToList();
             }
         }
 

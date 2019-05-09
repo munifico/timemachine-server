@@ -53,7 +53,7 @@ namespace TimemachineServer.Controllers
         [HttpGet]
         public ActionResult<List<Subject>> Universe(string exchange)
         {
-            return UniverseManager.Instance.GetUniverse(exchange);
+            return UniverseManager.Instance.GetUniverse("JP", exchange);
         }
 
         [HttpPost]
@@ -178,7 +178,7 @@ namespace TimemachineServer.Controllers
                 var analyzer = new Analyzer();
                 var reports = new Dictionary<string, List<Trend>>(); // key: StrategyType
 
-                foreach (var subject in UniverseManager.Instance.GetUniverse(null))
+                foreach (var subject in UniverseManager.Instance.GetUniverse("JP", null))
                 {
                     request.Portfolio = new List<PortfolioSubject>();
                     request.Portfolio.Add(new PortfolioSubject()
