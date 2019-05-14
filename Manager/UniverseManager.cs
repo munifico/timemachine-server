@@ -35,11 +35,11 @@ namespace TimeMachineServer
         {
             if (exchange == null)
             {
-                return universe.Where(x => x.Country == country).ToList();
+                return universe.Where(x => x.Country == country && x.MarketCap > 0).ToList();
             }
             else
             {
-                return universe.Where(x => x.Country == country && x.Exchange == exchange).ToList();
+                return universe.Where(x => x.Country == country && x.Exchange == exchange && x.MarketCap > 0).ToList();
             }
         }
 

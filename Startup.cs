@@ -58,6 +58,7 @@ namespace TimemachineServer
 
             UniverseManager.Instance.Initialize();
             AssetManager.Instance.AddAsset("JP225", "NIKKEI225");
+            AssetManager.Instance.AddAsset("KOSPI", "KOSPI");
 
             // Task.Run(() =>
             // {

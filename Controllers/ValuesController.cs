@@ -50,10 +50,10 @@ namespace TimemachineServer.Controllers
         {
         }
 
-        [HttpGet]
-        public ActionResult<List<Subject>> Universe(string exchange)
+        [HttpGet("{country}")]
+        public ActionResult<List<Subject>> Universe(string country)
         {
-            return UniverseManager.Instance.GetUniverse("JP", exchange);
+            return UniverseManager.Instance.GetUniverse(country, null);
         }
 
         [HttpPost]
@@ -72,7 +72,7 @@ namespace TimemachineServer.Controllers
 
                 foreach (var asset in request.Assets)
                 {
-                    if (asset.Exchange == "INDEX")
+                    if (asset.AssetCode == "JP225")
                     {
                         var index = context.Indices
                                             .Where(x => x.CreatedAt >= date && x.AssetCode == asset.AssetCode)
@@ -115,7 +115,35 @@ namespace TimemachineServer.Controllers
                             OpenPrice = indexCopy.Open,
                         });
                     }
-                    else
+                    else if (asset.AssetCode == "KOSPI")
+                    {
+                        var index = context.KoreaIndices
+                            .Where(x => x.CreatedAt >= date && x.AssetCode == asset.AssetCode)
+                            .OrderBy(x => x.CreatedAt)
+                            .Take(10) // date가 실제 트레이딩 날짜가 아닐 수 있기 때문에 최대 10일 뒤의 데이터를 가져온다.(10일간 거래를 안할 수 없다는 가정)
+                            .FirstOrDefault();
+
+                        var indexCopy = new KoreaIndex()
+                        {
+                            CreatedAt = index.CreatedAt,
+                            AssetCode = index.AssetCode,
+                            Close = index.Close,
+                            Open = index.Open,
+                            High = index.High,
+                            Low = index.Low,
+                            Volume = index.Volume
+                        };
+
+                        response.Data.Add(new ResOpenPrice.Context
+                        {
+                            AssetCode = asset.AssetCode,
+                            AssetName = AssetManager.Instance.GetAssetName(asset.AssetCode),
+                            Exchange = asset.Exchange,
+                            Date = indexCopy.CreatedAt,
+                            OpenPrice = indexCopy.Open,
+                        });
+                    }
+                    else if (asset.Exchange == "TSE" || asset.Exchange == "ETF" || asset.Exchange == "NIKKEI")
                     {
                         var stock = context.Stocks
                                             .Where(x => x.CreatedAt >= date && x.AssetCode == asset.AssetCode)
@@ -147,6 +175,33 @@ namespace TimemachineServer.Controllers
                                 stockCopy.Close = stockCopy.Close / split.SplitRatio;
                             }
                         });
+
+                        response.Data.Add(new ResOpenPrice.Context
+                        {
+                            AssetCode = asset.AssetCode,
+                            AssetName = AssetManager.Instance.GetAssetName(asset.AssetCode),
+                            Exchange = asset.Exchange,
+                            Date = stockCopy.CreatedAt,
+                            OpenPrice = stockCopy.Open,
+                        });
+                    }
+                    else if (asset.Exchange == "KOSPI" || asset.Exchange == "KOSDAQ")
+                    {
+                        var stock = context.KoreaStocks
+                                            .Where(x => x.CreatedAt >= date && x.AssetCode == asset.AssetCode)
+                                            .OrderBy(x => x.CreatedAt)
+                                            .Take(10) // date가 실제 트레이딩 날짜가 아닐 수 있기 때문에 최대 10일 뒤의 데이터를 가져온다.(10일간 거래를 안할 수 없다는 가정)
+                                            .FirstOrDefault();
+                        var stockCopy = new KoreaStock
+                        {
+                            CreatedAt = stock.CreatedAt,
+                            AssetCode = stock.AssetCode,
+                            Close = stock.Close,
+                            Open = stock.Open,
+                            High = stock.High,
+                            Low = stock.Low,
+                            Volume = stock.Volume
+                        };
 
                         response.Data.Add(new ResOpenPrice.Context
                         {

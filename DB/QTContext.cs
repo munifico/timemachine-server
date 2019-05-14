@@ -6,7 +6,9 @@ namespace TimeMachineServer.DB
     {
         public DbSet<Subject> Universe { get; set; }
         public DbSet<Stock> Stocks { get; set; }
+        public DbSet<KoreaStock> KoreaStocks { get; set; }
         public DbSet<Index> Indices { get; set; }
+        public DbSet<KoreaIndex> KoreaIndices { get; set; }
         public DbSet<TradingCalendar> TradingCalendars { get; set; }
         public DbSet<Split> Splits { get; set; }
 
@@ -26,7 +28,13 @@ namespace TimeMachineServer.DB
             modelBuilder.Entity<Stock>()
            .HasKey(e => new { e.CreatedAt, e.AssetCode });
 
+            modelBuilder.Entity<KoreaStock>()
+            .HasKey(e => new { e.CreatedAt, e.AssetCode });
+
             modelBuilder.Entity<Index>()
+            .HasKey(e => new { e.CreatedAt, e.AssetCode });
+
+            modelBuilder.Entity<KoreaIndex>()
             .HasKey(e => new { e.CreatedAt, e.AssetCode });
 
             modelBuilder.Entity<TradingCalendar>()

@@ -56,42 +56,64 @@ namespace TimemachineServer
                 var tradingDataset = new Dictionary<DateTime, ITradingData>();
                 using (var context = new QTContext())
                 {
-                    // 원본
-                    var stock = context.Stocks.Where(x => x.AssetCode == subject.AssetCode &&
-                        x.CreatedAt >= startDate && x.CreatedAt <= endDate).ToList();
-                    var stockCopy = stock.Select(x => new Stock
+                    if (request.Country == "JP")
                     {
-                        CreatedAt = x.CreatedAt,
-                        AssetCode = x.AssetCode,
-                        Close = x.Close,
-                        Open = x.Open,
-                        High = x.High,
-                        Low = x.Low,
-                        Volume = x.Volume
-                    }).ToList();
+                        // 원본
+                        var stock = context.Stocks.Where(x => x.AssetCode == subject.AssetCode &&
+                            x.CreatedAt >= startDate && x.CreatedAt <= endDate).ToList();
 
-                    // 분할정보
-                    var splits = context.Splits.Where(x => x.AssetCode == subject.AssetCode).ToList();
-
-                    // 분할적용
-                    splits.ForEach(split =>
-                    {
-                        foreach (var s in stockCopy.Where(x => x.CreatedAt < split.SplitDate))
+                        var stockCopy = stock.Select(x => new Stock
                         {
-                            s.Open = s.Open / split.SplitRatio;
-                            s.High = s.High / split.SplitRatio;
-                            s.Low = s.Low / split.SplitRatio;
-                            s.Close = s.Close / split.SplitRatio;
-                        }
-                    });
+                            CreatedAt = x.CreatedAt,
+                            AssetCode = x.AssetCode,
+                            Close = x.Close,
+                            Open = x.Open,
+                            High = x.High,
+                            Low = x.Low,
+                            Volume = x.Volume
+                        }).ToList();
 
-                    stockCopy.ForEach(x => tradingDataset.Add(x.CreatedAt, x));
+                        // 분할정보
+                        var splits = context.Splits.Where(x => x.AssetCode == subject.AssetCode).ToList();
+
+                        // 분할적용
+                        splits.ForEach(split =>
+                        {
+                            foreach (var s in stockCopy.Where(x => x.CreatedAt < split.SplitDate))
+                            {
+                                s.Open = s.Open / split.SplitRatio;
+                                s.High = s.High / split.SplitRatio;
+                                s.Low = s.Low / split.SplitRatio;
+                                s.Close = s.Close / split.SplitRatio;
+                            }
+                        });
+
+                        stockCopy.ForEach(x => tradingDataset.Add(x.CreatedAt, x));
+                    }
+                    else if (request.Country == "KR")
+                    {
+                        var stock = context.KoreaStocks.Where(x => x.AssetCode == subject.AssetCode &&
+                            x.CreatedAt >= startDate && x.CreatedAt <= endDate).ToList();
+
+                        var stockCopy = stock.Select(x => new Stock
+                        {
+                            CreatedAt = x.CreatedAt,
+                            AssetCode = x.AssetCode,
+                            Close = x.Close,
+                            Open = x.Open,
+                            High = x.High,
+                            Low = x.Low,
+                            Volume = x.Volume
+                        }).ToList();
+
+                        stockCopy.ForEach(x => tradingDataset.Add(x.CreatedAt, x));
+                    }
                 }
 
                 portfolioDataset.Add(subject.AssetCode, tradingDataset);
             }
 
-            var tradingCalendar = CreateCalendar(startDate, endDate);
+            var tradingCalendar = CreateCalendar(startDate, endDate, request.Country);
             var reports = new List<Report>();
 
             // benchmark
@@ -120,10 +142,26 @@ namespace TimemachineServer
                 var tradingDataset = new Dictionary<DateTime, ITradingData>();
                 var benchmarkDataset = new Dictionary<string, Dictionary<DateTime, ITradingData>>();
 
-                var index = context.Indices.Where(x => x.AssetCode == assetCode &&
-                    x.CreatedAt >= startDate && x.CreatedAt <= endDate).ToList();
+                if (request.Country == "JP")
+                {
+                    var index = context.Indices.Where(x => x.AssetCode == assetCode &&
+                                        x.CreatedAt >= startDate && x.CreatedAt <= endDate);
+                    if (0 < index.Count())
+                    {
+                        index.ToList().ForEach(x => tradingDataset.Add(x.CreatedAt, x));
+                    }
+                }
+                else if (request.Country == "KR")
+                {
+                    var index = context.KoreaIndices.Where(x => x.AssetCode == assetCode &&
+                                                            x.CreatedAt >= startDate && x.CreatedAt <= endDate);
 
-                index.ForEach(x => tradingDataset.Add(x.CreatedAt, x));
+                    if (0 < index.Count())
+                    {
+                        index.ToList().ForEach(x => tradingDataset.Add(x.CreatedAt, x));
+                    }
+                }
+
                 benchmarkDataset.Add(assetCode, tradingDataset);
 
                 var strategy = new BuyAndHold();
@@ -135,12 +173,12 @@ namespace TimemachineServer
             }
         }
 
-        private List<DateTime> CreateCalendar(DateTime start, DateTime end)
+        private List<DateTime> CreateCalendar(DateTime start, DateTime end, string country)
         {
             var tradingCalendar = new List<DateTime>();
             using (var context = new QTContext())
             {
-                tradingCalendar = context.TradingCalendars.Where(x => x.TradingDate >= start && x.TradingDate <= end && x.IsoCode == "XTKS").Select(x => x.TradingDate).ToList();
+                tradingCalendar = context.TradingCalendars.Where(x => x.TradingDate >= start && x.TradingDate <= end && x.Country == country).Select(x => x.TradingDate).ToList();
             }
 
             return tradingCalendar;

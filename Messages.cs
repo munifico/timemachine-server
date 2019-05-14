@@ -45,6 +45,7 @@ namespace TimemachineServer
             public double Ratio { get; set; }
         }
 
+        public string Country { get; set; }
         public string StartDate { get; set; }
         public string EndDate { get; set; }
         public double Capital { get; set; }
