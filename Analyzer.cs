@@ -13,6 +13,11 @@ namespace TimemachineServer
     {
         public List<Report> AnalyzePortfolio(ReqAnalyzePortfolio request, bool analyzeBenchmark = true)
         {
+            if (request.Country == null)
+            {
+                request.Country = "JP";
+            }
+
             var startDate = DateTime.ParseExact(request.StartDate, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             var endDate = DateTime.ParseExact(request.EndDate, "yyyy-MM-dd", CultureInfo.InvariantCulture);
 
