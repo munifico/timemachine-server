@@ -290,6 +290,9 @@ namespace TimeMachineServer
                 // var annualizedReturnRatio = Math.Pow(Math.Pow(_recordDetails[assetCode].Last().RatingBalance / _recordDetails[assetCode].First().RatingBalance, (1.0 / _tradingCalendar.Count)), 250.0) - 1.0;
                 // var volatilityRatio = GetStandardDeviation(_recordDetails[assetCode].Select(x => Convert.ToDouble(x.ReturnRatio)).ToList()) * Math.Sqrt(250);
 
+                var priceVolatilityRatio = 0 < _portfolioDataset[assetCode].Count ?
+                    _portfolioDataset[assetCode].Average(x => (x.Value.High - x.Value.Low) / x.Value.Close) : 0;
+
                 var summaryDetail = new SummaryDetail
                 {
                     RelationalKey = relationalKey,
@@ -301,7 +304,7 @@ namespace TimeMachineServer
                     PeriodReturnRatio = (endBalance - initialBalance) / initialBalance,
                     // AnnualizedReturnRatio = annualizedReturnRatio,
                     // VolatilityRatio = volatilityRatio,
-                    PriceVolatilityRatio = _portfolioDataset[assetCode].Average(x => (x.Value.High - x.Value.Low) / x.Value.Close),
+                    PriceVolatilityRatio = priceVolatilityRatio,
                     MddRatio = _holdStocks[assetCode].Mdd,
                     // SharpeRatio = annualizedReturnRatio / volatilityRatio
                 };
@@ -323,6 +326,9 @@ namespace TimeMachineServer
             var initBalance = Property.Capital;
             var endBalance = _report.Records.Last().TotalBalance;
 
+            var priceVolatilityRatio = 0 < summaryDetails.Count ?
+                  summaryDetails.Average(x => x.PriceVolatilityRatio) : 0;
+
             var summary = new Summary
             {
                 RelationalKey = relationalKey,
@@ -334,7 +340,7 @@ namespace TimeMachineServer
                 PeriodReturnRatio = periodReturnRatio,
                 AnnualizedReturnRatio = annualizedReturnRatio,
                 VolatilityRatio = volatilityRatio,
-                PriceVolatilityRatio = summaryDetails.Average(x => x.PriceVolatilityRatio),
+                PriceVolatilityRatio = priceVolatilityRatio,
                 MddRatio = mddRatio,
                 SharpeRatio = sharpeRatio,
             };
