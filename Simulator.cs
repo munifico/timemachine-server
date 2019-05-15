@@ -301,6 +301,7 @@ namespace TimeMachineServer
                     PeriodReturnRatio = (endBalance - initialBalance) / initialBalance,
                     // AnnualizedReturnRatio = annualizedReturnRatio,
                     // VolatilityRatio = volatilityRatio,
+                    PriceVolatilityRatio = _portfolioDataset[assetCode].Average(x => (x.Value.High - x.Value.Low) / x.Value.Close),
                     MddRatio = _holdStocks[assetCode].Mdd,
                     // SharpeRatio = annualizedReturnRatio / volatilityRatio
                 };
@@ -333,6 +334,7 @@ namespace TimeMachineServer
                 PeriodReturnRatio = periodReturnRatio,
                 AnnualizedReturnRatio = annualizedReturnRatio,
                 VolatilityRatio = volatilityRatio,
+                PriceVolatilityRatio = summaryDetails.Average(x => x.PriceVolatilityRatio),
                 MddRatio = mddRatio,
                 SharpeRatio = sharpeRatio,
             };

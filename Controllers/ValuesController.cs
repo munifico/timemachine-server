@@ -262,6 +262,7 @@ namespace TimemachineServer.Controllers
                             PeriodReturnRatio = report.Summary.PeriodReturnRatio,
                             AnnualizedReturnRatio = report.Summary.AnnualizedReturnRatio,
                             VolatilityRatio = report.Summary.VolatilityRatio,
+                            PriceVolatilityRatio = report.Summary.PriceVolatilityRatio,
                             MddRatio = report.Summary.MddRatio,
                             SharpeRatio = report.Summary.SharpeRatio,
                             Per = UniverseManager.Instance.FindUniverse(subject.AssetCode).Per,
