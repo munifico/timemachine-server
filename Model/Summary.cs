@@ -44,6 +44,7 @@ namespace TimeMachineServer
         public double InitialBalance { get; set; }
         public double EndBalance { get; set; }
         public double Commission { get; set; }
+        public int Transactions { get; set; } // 거래 횟수
         public double PeriodReturnRatio { get; set; }
         public double AnnualizedReturnRatio { get; set; }
         public double VolatilityRatio { get; set; }
@@ -60,6 +61,7 @@ namespace TimeMachineServer
         public double InitialBalance { get; set; }
         public double EndBalance { get; set; }
         public double Commission { get; set; }
+        public int Transactions { get; set; } // 거래 횟수
         public double PeriodReturnRatio { get; set; }
         public double AnnualizedReturnRatio { get; set; }
         public double VolatilityRatio { get; set; }
