@@ -259,6 +259,7 @@ namespace TimemachineServer.Controllers
                             InitialBalance = report.Summary.InitialBalance,
                             EndBalance = report.Summary.EndBalance,
                             Commission = report.Summary.Commission,
+                            Transactions = report.Transactions[subject.AssetCode].Count,
                             PeriodReturnRatio = report.Summary.PeriodReturnRatio,
                             AnnualizedReturnRatio = report.Summary.AnnualizedReturnRatio,
                             VolatilityRatio = report.Summary.VolatilityRatio,
