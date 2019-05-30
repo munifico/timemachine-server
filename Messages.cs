@@ -1,7 +1,7 @@
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using Newtonsoft.Json;
 using TimeMachineServer.Helper;
 
 namespace TimemachineServer
@@ -36,7 +36,7 @@ namespace TimemachineServer
         }
     }
 
-    public class ReqAnalyzePortfolio
+    public class ReqAnalyzePortfolio : ICloneable
     {
         public class PortfolioSubject
         {
@@ -61,5 +61,28 @@ namespace TimemachineServer
         public bool UseBuyAndHold { get; set; }
         public bool UseVolatilityBreakout { get; set; }
         public bool UseMovingAverage { get; set; }
+
+        protected virtual ReqAnalyzePortfolio DeepCopy()
+        {
+            ReqAnalyzePortfolio other = (ReqAnalyzePortfolio)MemberwiseClone();
+
+            // Deep-copy children
+            if (other.Portfolio != null)
+            {
+                other.Portfolio = new List<PortfolioSubject>(other.Portfolio);
+            }
+
+            return other;
+        }
+
+        public ReqAnalyzePortfolio Clone()
+        {
+            return DeepCopy();
+        }
+
+        object ICloneable.Clone()
+        {
+            return DeepCopy();
+        }
     }
 }

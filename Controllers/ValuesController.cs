@@ -1,14 +1,13 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using TimeMachineServer;
 using TimeMachineServer.DB;
 using static TimemachineServer.ReqAnalyzePortfolio;
-using static TimeMachineServer.Constants;
 
 namespace TimemachineServer.Controllers
 {
@@ -16,7 +15,9 @@ namespace TimemachineServer.Controllers
     [ApiController]
     public class ValuesController : ControllerBase
     {
-        private bool _analyzing = false;
+        private readonly bool _analyzing = false;
+        private readonly object _sync = new object();
+        private SemaphoreSlim _signal = new SemaphoreSlim(0, 1);
 
         // GET api/values
         [HttpGet]
@@ -230,60 +231,87 @@ namespace TimemachineServer.Controllers
         {
             return await Task.Run(() =>
             {
+                var requestTime = DateTime.Now;
+
                 var analyzer = new Analyzer();
                 var reports = new Dictionary<string, List<Trend>>(); // key: StrategyType
+                var completed = new List<string>();
 
-                foreach (var subject in UniverseManager.Instance.GetUniverse("JP", null))
+                var universe = UniverseManager.Instance.GetUniverse("JP", null);
+                foreach (var subject in universe)
                 {
-                    request.Portfolio = new List<PortfolioSubject>();
-                    request.Portfolio.Add(new PortfolioSubject()
+                    Task.Run(() =>
                     {
-                        AssetCode = subject.AssetCode,
-                        Volume = 1,
-                        Ratio = 1,
-                    });
-
-                    foreach (var report in analyzer.AnalyzePortfolio(request, analyzeBenchmark: false))
-                    {
-                        var strategyType = report.StrategyType;
-
-                        var trend = new Trend()
+                        var requestCopy = request.Clone();
+                        requestCopy.Portfolio = new List<PortfolioSubject>
                         {
-                            AssetCode = subject.AssetCode,
-                            AssetName = subject.AssetName,
-                            Exchange = subject.Exchange,
-                            Sector = subject.Sector,
-                            Industry = subject.Industry,
-                            MarketCap = subject.MarketCap,
-                            FirstDate = subject.FirstDate,
-                            InitialBalance = report.Summary.InitialBalance,
-                            EndBalance = report.Summary.EndBalance,
-                            Commission = report.Summary.Commission,
-                            Transactions = report.Transactions[subject.AssetCode].Count,
-                            PeriodReturnRatio = report.Summary.PeriodReturnRatio,
-                            AnnualizedReturnRatio = report.Summary.AnnualizedReturnRatio,
-                            VolatilityRatio = report.Summary.VolatilityRatio,
-                            PriceVolatilityRatio = report.Summary.PriceVolatilityRatio,
-                            MddRatio = report.Summary.MddRatio,
-                            SharpeRatio = report.Summary.SharpeRatio,
-                            Per = UniverseManager.Instance.FindUniverse(subject.AssetCode).Per,
-                            Pbr = UniverseManager.Instance.FindUniverse(subject.AssetCode).Pbr,
-                            EvEvitda = UniverseManager.Instance.FindUniverse(subject.AssetCode).EvEvitda,
-                            DivYield = UniverseManager.Instance.FindUniverse(subject.AssetCode).DivYield
+                            new PortfolioSubject()
+                            {
+                                AssetCode = subject.AssetCode,
+                                Volume = 1,
+                                Ratio = 1,
+                            }
                         };
 
-                        if (reports.ContainsKey(strategyType))
+                        foreach (var report in analyzer.AnalyzePortfolio(requestCopy, analyzeBenchmark: false))
                         {
-                            reports[strategyType].Add(trend);
-                        }
-                        else
-                        {
-                            reports.Add(strategyType, new List<Trend> { trend });
-                        }
-                    }
+                            var strategyType = report.StrategyType;
 
-                    Console.WriteLine(subject.AssetCode);
+                            var trend = new Trend()
+                            {
+                                AssetCode = subject.AssetCode,
+                                AssetName = subject.AssetName,
+                                Exchange = subject.Exchange,
+                                Sector = subject.Sector,
+                                Industry = subject.Industry,
+                                MarketCap = subject.MarketCap,
+                                FirstDate = subject.FirstDate,
+                                InitialBalance = report.Summary.InitialBalance,
+                                EndBalance = report.Summary.EndBalance,
+                                Commission = report.Summary.Commission,
+                                Transactions = report.Transactions[subject.AssetCode].Count,
+                                PeriodReturnRatio = report.Summary.PeriodReturnRatio,
+                                AnnualizedReturnRatio = report.Summary.AnnualizedReturnRatio,
+                                VolatilityRatio = report.Summary.VolatilityRatio,
+                                PriceVolatilityRatio = report.Summary.PriceVolatilityRatio,
+                                MddRatio = report.Summary.MddRatio,
+                                SharpeRatio = report.Summary.SharpeRatio,
+                                Per = UniverseManager.Instance.FindUniverse(subject.AssetCode).Per,
+                                Pbr = UniverseManager.Instance.FindUniverse(subject.AssetCode).Pbr,
+                                EvEvitda = UniverseManager.Instance.FindUniverse(subject.AssetCode).EvEvitda,
+                                DivYield = UniverseManager.Instance.FindUniverse(subject.AssetCode).DivYield
+                            };
+
+                            lock (_sync)
+                            {
+                                if (reports.ContainsKey(strategyType))
+                                {
+                                    reports[strategyType].Add(trend);
+                                }
+                                else
+                                {
+                                    reports.Add(strategyType, new List<Trend> { trend });
+                                }
+                            }
+                        }
+
+                        Console.WriteLine($"[{requestTime.ToShortTimeString()}] {subject.AssetCode}");
+
+                        lock (_sync)
+                        {
+                            completed.Add(subject.AssetCode);
+
+                            if (completed.Count >= universe.Count)
+                            {
+                                _signal.Release();
+                            }
+                        }
+                    });
                 }
+
+                _signal.Wait();
+
+                Console.WriteLine($"Start - {requestTime.ToShortTimeString()} End - {DateTime.Now.ToShortTimeString()}");
 
                 return reports;
             });
@@ -291,8 +319,7 @@ namespace TimemachineServer.Controllers
 
         private bool Validate(string date)
         {
-            DateTime temp;
-            return DateTime.TryParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out temp);
+            return DateTime.TryParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime temp);
         }
     }
 }
