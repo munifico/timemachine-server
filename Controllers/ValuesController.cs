@@ -301,7 +301,7 @@ namespace TimemachineServer.Controllers
                         {
                             completed.Add(subject.AssetCode);
 
-                            if (completed.Count >= universe.Count)
+                            if (completed.Count() >= universe.Count())
                             {
                                 _signal.Release();
                             }
