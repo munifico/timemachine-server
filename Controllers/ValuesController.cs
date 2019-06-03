@@ -17,7 +17,6 @@ namespace TimemachineServer.Controllers
     {
         private readonly bool _analyzing = false;
         private readonly object _sync = new object();
-        private SemaphoreSlim _signal = new SemaphoreSlim(0, 1);
 
         // GET api/values
         [HttpGet]
@@ -229,7 +228,7 @@ namespace TimemachineServer.Controllers
         [HttpPost]
         public async Task<ActionResult<Dictionary<string, List<Trend>>>> AnalyzeAllPortfolio([FromBody] ReqAnalyzePortfolio request)
         {
-            return await Task.Run(() =>
+            return await Task.Run(async () =>
             {
                 var requestTime = DateTime.Now;
 
@@ -238,9 +237,12 @@ namespace TimemachineServer.Controllers
                 var completed = new List<string>();
 
                 var universe = UniverseManager.Instance.GetUniverse("JP", null);
+
+                var tasks = new List<Task>();
+
                 foreach (var subject in universe)
                 {
-                    Task.Run(() =>
+                    var task = Task.Run(() =>
                     {
                         var requestCopy = request.Clone();
                         requestCopy.Portfolio = new List<PortfolioSubject>
@@ -296,21 +298,13 @@ namespace TimemachineServer.Controllers
                         }
 
                         Console.WriteLine($"[{requestTime.ToShortTimeString()}] {subject.AssetCode}");
-
-                        lock (_sync)
-                        {
-                            completed.Add(subject.AssetCode);
-
-                            if (completed.Count() >= universe.Count())
-                            {
-                                _signal.Release();
-                            }
-                        }
                     });
+
+                    tasks.Add(task);
                 }
 
-                _signal.Wait();
-
+                Console.WriteLine("Wait tasks...");
+                await Task.WhenAll(tasks);
                 Console.WriteLine($"Start - {requestTime.ToShortTimeString()} End - {DateTime.Now.ToShortTimeString()}");
 
                 return reports;
