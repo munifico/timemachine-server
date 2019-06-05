@@ -46,6 +46,8 @@ namespace TimemachineServer
         }
 
         public string Country { get; set; }
+        public string Exchange { get; set; }
+
         public string StartDate { get; set; }
         public string EndDate { get; set; }
         public double Capital { get; set; }

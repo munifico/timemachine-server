@@ -16,15 +16,15 @@ namespace TimeMachineServer
         public static UniverseManager Instance => lazy.Value;
         #endregion
 
-        private List<Subject> universe = new List<Subject>();
+        private List<Subject> _universe = new List<Subject>();
 
         public void Initialize()
         {
             using (var context = new QTContext())
             {
-                universe = context.Universe.Where(x => x.FirstDate != null).ToList();
+                _universe = context.Universe.Where(x => x.FirstDate != null).ToList();
 
-                universe.ForEach(x =>
+                _universe.ForEach(x =>
                 {
                     AssetManager.Instance.AddAsset(x.AssetCode, x.AssetName);
                 });
@@ -35,17 +35,24 @@ namespace TimeMachineServer
         {
             if (exchange == null)
             {
-                return universe.Where(x => x.Country == country && x.MarketCap > 0).ToList();
+                return _universe.Where(x => x.Country == country && x.MarketCap > 0).ToList();
             }
             else
             {
-                return universe.Where(x => x.Country == country && x.Exchange == exchange && x.MarketCap > 0).ToList();
+                if (exchange == "FX")
+                {
+                    return _universe.Where(x => x.Country == country && x.Exchange == exchange).ToList();
+                }
+                else
+                {
+                    return _universe.Where(x => x.Country == country && x.Exchange == exchange && x.MarketCap > 0).ToList();
+                }
             }
         }
 
         public Subject FindUniverse(string assetCode)
         {
-            return universe.Where(x => x.AssetCode == assetCode).FirstOrDefault();
+            return _universe.Where(x => x.AssetCode == assetCode).FirstOrDefault();
         }
     }
 }

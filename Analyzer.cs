@@ -61,7 +61,25 @@ namespace TimemachineServer
                 var tradingDataset = new Dictionary<DateTime, ITradingData>();
                 using (var context = new QTContext())
                 {
-                    if (request.Country == "JP")
+                    if (request.Country == "FX")
+                    {
+                        var fx = context.FX.Where(x => x.AssetCode == subject.AssetCode &&
+                            x.CreatedAt >= startDate && x.CreatedAt <= endDate).ToList();
+
+                        var fxCopy = fx.Select(x => new Stock
+                        {
+                            CreatedAt = x.CreatedAt,
+                            AssetCode = x.AssetCode,
+                            Close = x.Close,
+                            Open = x.Open,
+                            High = x.High,
+                            Low = x.Low,
+                            Volume = 0
+                        }).ToList();
+
+                        fxCopy.ForEach(x => tradingDataset.Add(x.CreatedAt, x));
+                    }
+                    else if (request.Country == "JP")
                     {
                         // 원본
                         var stock = context.Stocks.Where(x => x.AssetCode == subject.AssetCode &&
@@ -183,7 +201,14 @@ namespace TimemachineServer
             var tradingCalendar = new List<DateTime>();
             using (var context = new QTContext())
             {
-                tradingCalendar = context.TradingCalendars.Where(x => x.TradingDate >= start && x.TradingDate <= end && x.Country == country).Select(x => x.TradingDate).ToList();
+                if (country == "FX")
+                {
+                    tradingCalendar = context.TradingCalendars.Where(x => x.TradingDate >= start && x.TradingDate <= end && x.IsoCode == country).Select(x => x.TradingDate).ToList();
+                }
+                else
+                {
+                    tradingCalendar = context.TradingCalendars.Where(x => x.TradingDate >= start && x.TradingDate <= end && x.Country == country).Select(x => x.TradingDate).ToList();
+                }
             }
 
             return tradingCalendar;
