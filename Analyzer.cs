@@ -207,7 +207,7 @@ namespace TimemachineServer
                 }
                 else
                 {
-                    tradingCalendar = context.TradingCalendars.Where(x => x.TradingDate >= start && x.TradingDate <= end && x.Country == country).Select(x => x.TradingDate).ToList();
+                    tradingCalendar = context.TradingCalendars.Where(x => x.TradingDate >= start && x.TradingDate <= end && x.Country == country && x.IsoCode != "FX").Select(x => x.TradingDate).ToList();
                 }
             }
 
