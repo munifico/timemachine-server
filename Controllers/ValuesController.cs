@@ -263,7 +263,16 @@ namespace TimemachineServer.Controllers
                 var reports = new Dictionary<string, List<Trend>>(); // key: StrategyType
                 var completed = new List<string>();
 
-                var universe = UniverseManager.Instance.GetUniverse("JP", null);
+                List<Subject> universe = null;
+
+                if (request.Country == "FX")
+                {
+                    universe = UniverseManager.Instance.GetUniverse("JP", "FX");
+                }
+                else
+                {
+                    universe = UniverseManager.Instance.GetUniverse(request.Country, null);
+                }
 
                 var tasks = new List<Task>();
 
