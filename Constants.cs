@@ -91,5 +91,12 @@ namespace TimeMachineServer
             Weekly,
             Monthly,
         }
+
+        public enum Period
+        {
+            Day,
+            Week,
+            Min60,
+        }
     }
 }

@@ -39,7 +39,7 @@ namespace TimeMachineServer
             }
             else
             {
-                if (exchange == "FX")
+                if (exchange.Contains("FX"))
                 {
                     return _universe.Where(x => x.Country == country && x.Exchange == exchange).ToList();
                 }

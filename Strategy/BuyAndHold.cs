@@ -16,10 +16,11 @@ namespace TimeMachineServer
             List<DateTime> tradingCalendar,
             BacktestingProperty property,
             Dictionary<string, PortfolioSubject> portfolio,
+            Period period,
             bool isBenchmark = false)
         {
             _simulator = new Simulator();
-            return _simulator.Run(this, portfolioDataset, tradingCalendar, property, portfolio, isBenchmark);
+            return _simulator.Run(this, portfolioDataset, tradingCalendar, property, portfolio, period, isBenchmark);
         }
 
         public override void OnAfterOpen(string assetCode)
