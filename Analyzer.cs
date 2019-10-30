@@ -13,6 +13,8 @@ namespace TimemachineServer
     {
         public List<Report> AnalyzePortfolio(ReqAnalyzePortfolio request, bool analyzeBenchmark = true)
         {
+            var period = Period.Day;
+
             if (request.Country == null)
             {
                 request.Country = "JP";
@@ -61,8 +63,10 @@ namespace TimemachineServer
                 var tradingDataset = new Dictionary<DateTime, ITradingData>();
                 using (var context = new QTContext())
                 {
-                    if (request.Country == "FX_1d")
+                    if (request.Country == "FX_1D")
                     {
+                        period = Period.Day;
+
                         var fx = context.FX1D.Where(x => x.AssetCode == subject.AssetCode &&
                             x.CreatedAt >= startDate && x.CreatedAt <= endDate).ToList();
 
@@ -79,9 +83,31 @@ namespace TimemachineServer
 
                         fxCopy.ForEach(x => tradingDataset.Add(x.CreatedAt, x));
                     }
-                    else if (request.Country == "FX_1w")
+                    else if (request.Country == "FX_1W")
                     {
+                        period = Period.Week;
+
                         var fx = context.FX1W.Where(x => x.AssetCode == subject.AssetCode &&
+                            x.CreatedAt >= startDate && x.CreatedAt <= endDate).ToList();
+
+                        var fxCopy = fx.Select(x => new Stock
+                        {
+                            CreatedAt = x.CreatedAt,
+                            AssetCode = x.AssetCode,
+                            Close = x.Close,
+                            Open = x.Open,
+                            High = x.High,
+                            Low = x.Low,
+                            Volume = 0
+                        }).ToList();
+
+                        fxCopy.ForEach(x => tradingDataset.Add(x.CreatedAt, x));
+                    }
+                    else if (request.Country == "FX_60M")
+                    {
+                        period = Period.Min60;
+
+                        var fx = context.FX60M.Where(x => x.AssetCode == subject.AssetCode &&
                             x.CreatedAt >= startDate && x.CreatedAt <= endDate).ToList();
 
                         var fxCopy = fx.Select(x => new Stock
@@ -167,7 +193,7 @@ namespace TimemachineServer
             var portfolio = request.Portfolio.ToDictionary(x => x.AssetCode, x => x);
             foreach (var strategy in strategies.Values)
             {
-                var report = strategy.Run(portfolioDataset, tradingCalendar, property, portfolio);
+                var report = strategy.Run(portfolioDataset, tradingCalendar, property, portfolio, period);
                 reports.Add(report);
             }
 
@@ -209,7 +235,7 @@ namespace TimemachineServer
                 var benchmark = new Dictionary<string, PortfolioSubject>();
                 benchmark.Add(assetCode, request.Benchmark);
 
-                var report = strategy.Run(benchmarkDataset, tradingCalendar, property, benchmark, isBenchmark: true);
+                var report = strategy.Run(benchmarkDataset, tradingCalendar, property, benchmark, period: Period.Day, isBenchmark: true);
                 reports.Add(report);
             }
         }
@@ -219,13 +245,14 @@ namespace TimemachineServer
             var tradingCalendar = new List<DateTime>();
             using (var context = new QTContext())
             {
-                if (country == "FX")
+                if (country.Contains("FX"))
                 {
                     tradingCalendar = context.TradingCalendars.Where(x => x.TradingDate >= start && x.TradingDate <= end && x.IsoCode == country).Select(x => x.TradingDate).ToList();
                 }
                 else
                 {
-                    tradingCalendar = context.TradingCalendars.Where(x => x.TradingDate >= start && x.TradingDate <= end && x.Country == country && x.IsoCode != "FX").Select(x => x.TradingDate).ToList();
+                    tradingCalendar = context.TradingCalendars.Where(x => x.TradingDate >= start && x.TradingDate <= end && x.Country == country && !x.IsoCode.Contains("FX"))
+                        .Select(x => x.TradingDate).ToList();
                 }
             }
 

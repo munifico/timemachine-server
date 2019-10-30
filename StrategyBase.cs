@@ -22,6 +22,7 @@ namespace TimeMachineServer
            List<DateTime> tradingCalendar,
            BacktestingProperty property,
            Dictionary<string, PortfolioSubject> portfolio,
+           Period period,
            bool isBenchmark = false);
 
         public abstract void OnAfterOpen(string assetCode);

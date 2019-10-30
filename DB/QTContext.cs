@@ -20,7 +20,7 @@ namespace TimeMachineServer.DB
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseMySQL(
-                @"server=qata-mysql.verda-abizqt.jp2-dev.db.line-apps-dev.com;port=10130;database=stock;uid=abiz;password=OeiLuskpR0782wEZ;Max Pool Size=10");
+                @"server=10.127.38.17;port=20306;database=qt;uid=admin;password=Lineabiz123!;Max Pool Size=10");
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -28,31 +28,31 @@ namespace TimeMachineServer.DB
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<Subject>()
-                .HasKey(e => e.AssetCode);
+                .HasKey(e => new { e.AssetCode, e.Exchange });
 
             modelBuilder.Entity<Stock>()
-           .HasKey(e => new { e.CreatedAt, e.AssetCode });
+                .HasKey(e => new { e.CreatedAt, e.AssetCode });
 
             modelBuilder.Entity<KoreaStock>()
-            .HasKey(e => new { e.CreatedAt, e.AssetCode });
+                .HasKey(e => new { e.CreatedAt, e.AssetCode });
 
             modelBuilder.Entity<FX1D>()
-           .HasKey(e => new { e.CreatedAt, e.AssetCode });
+                .HasKey(e => new { e.CreatedAt, e.AssetCode });
 
             modelBuilder.Entity<FX1W>()
-            .HasKey(e => new { e.CreatedAt, e.AssetCode });
+                .HasKey(e => new { e.CreatedAt, e.AssetCode });
 
             modelBuilder.Entity<FX60M>()
-            .HasKey(e => new { e.CreatedAt, e.AssetCode });
+                .HasKey(e => new { e.CreatedAt, e.AssetCode });
 
             modelBuilder.Entity<Index>()
-            .HasKey(e => new { e.CreatedAt, e.AssetCode });
+                .HasKey(e => new { e.CreatedAt, e.AssetCode });
 
             modelBuilder.Entity<KoreaIndex>()
-            .HasKey(e => new { e.CreatedAt, e.AssetCode });
+                .HasKey(e => new { e.CreatedAt, e.AssetCode });
 
             modelBuilder.Entity<TradingCalendar>()
-            .HasKey(e => new { e.TradingDate, e.IsoCode });
+                .HasKey(e => new { e.TradingDate, e.IsoCode });
 
             modelBuilder.Entity<Split>()
                 .HasKey(e => new { e.AssetCode, e.SplitDate });

@@ -212,15 +212,14 @@ namespace TimemachineServer.Controllers
                             OpenPrice = stockCopy.Open,
                         });
                     }
-                    else if (asset.Exchange == "FX_1d")
+                    else if (asset.Exchange == "FX_1D")
                     {
                         var fx = context.FX1D
                                             .Where(x => x.CreatedAt >= date && x.AssetCode == asset.AssetCode)
                                             .OrderBy(x => x.CreatedAt)
                                             .Take(10) // date가 실제 트레이딩 날짜가 아닐 수 있기 때문에 최대 10일 뒤의 데이터를 가져온다.(10일간 거래를 안할 수 없다는 가정)
                                             .FirstOrDefault();
-
-                        var fxCopy = new FX
+                        var fxCopy = new FX1D
                         {
                             CreatedAt = fx.CreatedAt,
                             AssetCode = fx.AssetCode,
@@ -240,15 +239,14 @@ namespace TimemachineServer.Controllers
                             OpenPrice = fxCopy.Open,
                         });
                     }
-                    else if (asset.Exchange == "FX_1w")
+                    else if (asset.Exchange == "FX_1W")
                     {
                         var fx = context.FX1W
                                             .Where(x => x.CreatedAt >= date && x.AssetCode == asset.AssetCode)
                                             .OrderBy(x => x.CreatedAt)
                                             .Take(10) // date가 실제 트레이딩 날짜가 아닐 수 있기 때문에 최대 10일 뒤의 데이터를 가져온다.(10일간 거래를 안할 수 없다는 가정)
                                             .FirstOrDefault();
-
-                        var fxCopy = new FX
+                        var fxCopy = new FX1W
                         {
                             CreatedAt = fx.CreatedAt,
                             AssetCode = fx.AssetCode,
@@ -268,15 +266,14 @@ namespace TimemachineServer.Controllers
                             OpenPrice = fxCopy.Open,
                         });
                     }
-                    else if (asset.Exchange == "FX_60m")
+                    else if (asset.Exchange == "FX_60M")
                     {
                         var fx = context.FX60M
                                             .Where(x => x.CreatedAt >= date && x.AssetCode == asset.AssetCode)
                                             .OrderBy(x => x.CreatedAt)
                                             .Take(10) // date가 실제 트레이딩 날짜가 아닐 수 있기 때문에 최대 10일 뒤의 데이터를 가져온다.(10일간 거래를 안할 수 없다는 가정)
                                             .FirstOrDefault();
-
-                        var fxCopy = new FX
+                        var fxCopy = new FX60M
                         {
                             CreatedAt = fx.CreatedAt,
                             AssetCode = fx.AssetCode,
@@ -322,9 +319,9 @@ namespace TimemachineServer.Controllers
 
                 List<Subject> universe = null;
 
-                if (request.Country == "FX")
+                if (request.Country.Contains("FX"))
                 {
-                    universe = UniverseManager.Instance.GetUniverse("JP", "FX");
+                    universe = UniverseManager.Instance.GetUniverse("JP", request.Country);
                 }
                 else
                 {

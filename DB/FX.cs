@@ -3,19 +3,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TimeMachineServer.DB
 {
-    public class FX
-    {
-        public DateTime CreatedAt { get; set; }
-        public string AssetCode { get; set; }
-        public double Close { get; set; }
-        public double Open { get; set; }
-        public double High { get; set; }
-        public double Low { get; set; }
-        public double Volume { get; set; }
-    }
-
     [Table("fx_1d")]
-    public class FX1D : ITradingData
+    public partial class FX1D : ITradingData
     {
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }
@@ -40,7 +29,7 @@ namespace TimeMachineServer.DB
     }
 
     [Table("fx_1w")]
-    public class FX1W : ITradingData
+    public partial class FX1W : ITradingData
     {
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }
@@ -65,7 +54,7 @@ namespace TimeMachineServer.DB
     }
 
     [Table("fx_60m")]
-    public class FX60M : ITradingData
+    public partial class FX60M : ITradingData
     {
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }
