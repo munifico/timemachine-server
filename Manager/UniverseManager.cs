@@ -39,9 +39,35 @@ namespace TimeMachineServer
             }
             else
             {
-                if (exchange == "FX")
+                if (exchange.Contains("FX"))
                 {
-                    return _universe.Where(x => x.Country == country && x.Exchange == exchange).ToList();
+                    var universe = _universe.Where(x => x.Country == country && x.Exchange == "FX").ToList();
+
+                    using (var context = new QTContext())
+                    {
+                        if (exchange == "FX_1d")
+                        {
+                            universe.ForEach(subject =>
+                            {
+                                subject.FirstDate = context.FX1D.Where(x => x.AssetCode == subject.AssetCode).Min(x => x.CreatedAt);
+                            });
+                        }
+                        else if (exchange == "FX_1w")
+                        {
+                            universe.ForEach(subject =>
+                            {
+                                subject.FirstDate = context.FX1W.Where(x => x.AssetCode == subject.AssetCode).Min(x => x.CreatedAt);
+                            });
+                        }
+                        else if (exchange == "FX_60m")
+                        {
+                            universe.ForEach(subject =>
+                            {
+                                subject.FirstDate = context.FX60M.Where(x => x.AssetCode == subject.AssetCode).Min(x => x.CreatedAt);
+                            });
+                        }
+                    }
+                    return universe;
                 }
                 else
                 {

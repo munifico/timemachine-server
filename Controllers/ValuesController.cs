@@ -212,13 +212,70 @@ namespace TimemachineServer.Controllers
                             OpenPrice = stockCopy.Open,
                         });
                     }
-                    else if (asset.Exchange == "FX")
+                    else if (asset.Exchange == "FX_1d")
                     {
-                        var fx = context.FX
+                        var fx = context.FX1D
                                             .Where(x => x.CreatedAt >= date && x.AssetCode == asset.AssetCode)
                                             .OrderBy(x => x.CreatedAt)
                                             .Take(10) // date가 실제 트레이딩 날짜가 아닐 수 있기 때문에 최대 10일 뒤의 데이터를 가져온다.(10일간 거래를 안할 수 없다는 가정)
                                             .FirstOrDefault();
+
+                        var fxCopy = new FX
+                        {
+                            CreatedAt = fx.CreatedAt,
+                            AssetCode = fx.AssetCode,
+                            Close = fx.Close,
+                            Open = fx.Open,
+                            High = fx.High,
+                            Low = fx.Low,
+                            Volume = 0
+                        };
+
+                        response.Data.Add(new ResOpenPrice.Context
+                        {
+                            AssetCode = asset.AssetCode,
+                            AssetName = AssetManager.Instance.GetAssetName(asset.AssetCode),
+                            Exchange = asset.Exchange,
+                            Date = fxCopy.CreatedAt,
+                            OpenPrice = fxCopy.Open,
+                        });
+                    }
+                    else if (asset.Exchange == "FX_1w")
+                    {
+                        var fx = context.FX1W
+                                            .Where(x => x.CreatedAt >= date && x.AssetCode == asset.AssetCode)
+                                            .OrderBy(x => x.CreatedAt)
+                                            .Take(10) // date가 실제 트레이딩 날짜가 아닐 수 있기 때문에 최대 10일 뒤의 데이터를 가져온다.(10일간 거래를 안할 수 없다는 가정)
+                                            .FirstOrDefault();
+
+                        var fxCopy = new FX
+                        {
+                            CreatedAt = fx.CreatedAt,
+                            AssetCode = fx.AssetCode,
+                            Close = fx.Close,
+                            Open = fx.Open,
+                            High = fx.High,
+                            Low = fx.Low,
+                            Volume = 0
+                        };
+
+                        response.Data.Add(new ResOpenPrice.Context
+                        {
+                            AssetCode = asset.AssetCode,
+                            AssetName = AssetManager.Instance.GetAssetName(asset.AssetCode),
+                            Exchange = asset.Exchange,
+                            Date = fxCopy.CreatedAt,
+                            OpenPrice = fxCopy.Open,
+                        });
+                    }
+                    else if (asset.Exchange == "FX_60m")
+                    {
+                        var fx = context.FX60M
+                                            .Where(x => x.CreatedAt >= date && x.AssetCode == asset.AssetCode)
+                                            .OrderBy(x => x.CreatedAt)
+                                            .Take(10) // date가 실제 트레이딩 날짜가 아닐 수 있기 때문에 최대 10일 뒤의 데이터를 가져온다.(10일간 거래를 안할 수 없다는 가정)
+                                            .FirstOrDefault();
+
                         var fxCopy = new FX
                         {
                             CreatedAt = fx.CreatedAt,

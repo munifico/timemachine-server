@@ -7,7 +7,11 @@ namespace TimeMachineServer.DB
         public DbSet<Subject> Universe { get; set; }
         public DbSet<Stock> Stocks { get; set; }
         public DbSet<KoreaStock> KoreaStocks { get; set; }
-        public DbSet<FX> FX { get; set; }
+
+        public DbSet<FX1D> FX1D { get; set; }
+        public DbSet<FX1W> FX1W { get; set; }
+        public DbSet<FX60M> FX60M { get; set; }
+
         public DbSet<Index> Indices { get; set; }
         public DbSet<KoreaIndex> KoreaIndices { get; set; }
         public DbSet<TradingCalendar> TradingCalendars { get; set; }
@@ -16,7 +20,7 @@ namespace TimeMachineServer.DB
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseMySQL(
-                @"server=10.127.38.17;port=20306;database=qt;uid=admin;password=Lineabiz123!;Max Pool Size=10");
+                @"server=qata-mysql.verda-abizqt.jp2-dev.db.line-apps-dev.com;port=10130;database=stock;uid=abiz;password=OeiLuskpR0782wEZ;Max Pool Size=10");
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -32,8 +36,14 @@ namespace TimeMachineServer.DB
             modelBuilder.Entity<KoreaStock>()
             .HasKey(e => new { e.CreatedAt, e.AssetCode });
 
-            modelBuilder.Entity<FX>()
+            modelBuilder.Entity<FX1D>()
            .HasKey(e => new { e.CreatedAt, e.AssetCode });
+
+            modelBuilder.Entity<FX1W>()
+            .HasKey(e => new { e.CreatedAt, e.AssetCode });
+
+            modelBuilder.Entity<FX60M>()
+            .HasKey(e => new { e.CreatedAt, e.AssetCode });
 
             modelBuilder.Entity<Index>()
             .HasKey(e => new { e.CreatedAt, e.AssetCode });

@@ -61,9 +61,27 @@ namespace TimemachineServer
                 var tradingDataset = new Dictionary<DateTime, ITradingData>();
                 using (var context = new QTContext())
                 {
-                    if (request.Country == "FX")
+                    if (request.Country == "FX_1d")
                     {
-                        var fx = context.FX.Where(x => x.AssetCode == subject.AssetCode &&
+                        var fx = context.FX1D.Where(x => x.AssetCode == subject.AssetCode &&
+                            x.CreatedAt >= startDate && x.CreatedAt <= endDate).ToList();
+
+                        var fxCopy = fx.Select(x => new Stock
+                        {
+                            CreatedAt = x.CreatedAt,
+                            AssetCode = x.AssetCode,
+                            Close = x.Close,
+                            Open = x.Open,
+                            High = x.High,
+                            Low = x.Low,
+                            Volume = 0
+                        }).ToList();
+
+                        fxCopy.ForEach(x => tradingDataset.Add(x.CreatedAt, x));
+                    }
+                    else if (request.Country == "FX_1w")
+                    {
+                        var fx = context.FX1W.Where(x => x.AssetCode == subject.AssetCode &&
                             x.CreatedAt >= startDate && x.CreatedAt <= endDate).ToList();
 
                         var fxCopy = fx.Select(x => new Stock
